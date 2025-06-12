@@ -1,9 +1,7 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
+<html lang="zh-CN"><head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>沉浸式音乐播放器</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>旋转唱片音乐播放器</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     
@@ -19,7 +17,6 @@
                         dark: '#1D2129',
                         light: '#F2F3F5',
                         muted: '#86909C',
-                        overlay: 'rgba(0, 0, 0, 0.5)'
                     },
                     fontFamily: {
                         inter: ['Inter', 'system-ui', 'sans-serif'],
@@ -35,10 +32,10 @@
             .content-auto {
                 content-visibility: auto;
             }
-            .music-rotate {
-                animation: rotate 30s linear infinite;
+            .vinyl-rotate {
+                animation: rotate 20s linear infinite;
             }
-            .music-rotate.paused {
+            .vinyl-rotate.paused {
                 animation-play-state: paused;
             }
             .backdrop-blur {
@@ -53,6 +50,28 @@
             }
             .transition-transform-opacity {
                 transition: transform 0.3s ease, opacity 0.3s ease;
+            }
+            .record-center {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 24px;
+                height: 24px;
+                background-color: #1D2129;
+                border-radius: 50%;
+                z-index: 10;
+            }
+            .record-groove {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 80%;
+                height: 80%;
+                border: 1px dashed rgba(255, 255, 255, 0.1);
+                border-radius: 50%;
+                z-index: 5;
             }
         }
         
@@ -99,25 +118,26 @@
 <body class="font-inter text-light min-h-screen flex flex-col items-center justify-center p-4">
     <!-- 背景图片容器 -->
     <div class="bg-container">
-        <img id="bg-image" src="https://picsum.photos/seed/music/1920/1080" alt="背景图片" class="bg-image">
+        <img id="bg-image" src="https://y.qq.com/music/photo_new/T002R300x300M000000MkMni19ClKG_5.jpg?max_age=2592000" alt="背景图片" class="bg-image">
         <div class="bg-overlay"></div>
     </div>
     
     <!-- 页面标题 -->
     <h1 class="text-[clamp(1.5rem,5vw,2.5rem)] font-bold text-white mb-6 text-center text-shadow z-10">
-        <i class="fa fa-music text-primary mr-2"></i>沉浸式音乐播放器
+        <i class="fa fa-music text-primary mr-2"></i>旋转唱片音乐播放器
     </h1>
     
     <!-- 播放器主体 -->
     <div class="w-full max-w-md bg-dark/70 backdrop-blur rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.3)] overflow-hidden transition-all duration-300 hover:shadow-lg z-10">
-        <!-- 专辑封面 -->
-        <div class="relative aspect-square overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20">
-            <img id="album-cover" src="https://picsum.photos/seed/music/800/800" alt="专辑封面" 
-                 class="w-full h-full object-cover music-rotate paused rounded-t-2xl transition-opacity duration-500">
+        <!-- 专辑封面 - 圆形唱片效果 -->
+        <div class="relative aspect-square overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+            <div class="absolute inset-0 record-groove"></div>
+            <img id="album-cover" src="https://y.qq.com/music/photo_new/T002R300x300M000000MkMni19ClKG_5.jpg?max_age=2592000" alt="专辑封面" class="w-[85%] h-[85%] object-cover vinyl-rotate paused rounded-full shadow-[0_0_20px_rgba(0,0,0,0.3)] z-5">
+            <div class="record-center"></div>
             <!-- 封面上传按钮 -->
             <label for="cover-upload" class="absolute bottom-3 right-3 w-10 h-10 bg-primary/80 rounded-full flex items-center justify-center cursor-pointer hover:bg-primary transition-colors shadow-lg z-10">
                 <i class="fa fa-camera text-white"></i>
-                <input id="cover-upload" type="file" accept="image/*" class="hidden" />
+                <input id="cover-upload" type="file" accept="image/*" class="hidden">
             </label>
             <!-- 播放/暂停按钮叠加在封面中央 -->
             <button id="play-pause-big" class="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 hover:opacity-100 transition-opacity duration-300 z-10">
@@ -127,96 +147,41 @@
         
         <!-- 歌曲信息 -->
         <div class="p-6">
-            <h2 id="song-title" class="text-xl font-bold text-white mb-1 text-shadow">未选择歌曲</h2>
-            <p id="song-artist" class="text-muted mb-4 text-shadow">请添加音乐</p>
-            
-            <!-- 进度条 -->
-            <div class="mb-4">
-                <div class="flex justify-between text-xs text-muted mb-1">
-                    <span id="current-time">0:00</span>
-                    <span id="total-time">0:00</span>
-                </div>
-                <div class="h-1 bg-gray-700 rounded-full overflow-hidden cursor-pointer" id="progress-container">
-                    <div class="h-full w-0 bg-primary rounded-full transition-all duration-100" id="progress-bar"></div>
-                </div>
-            </div>
-            
-            <!-- 控制按钮 -->
-            <div class="flex items-center justify-between mb-6">
-                <button id="prev-song" class="text-muted hover:text-white transition-colors">
-                    <i class="fa fa-step-backward text-xl"></i>
-                </button>
-                <button id="play-pause" class="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:bg-secondary transition-all duration-300">
-                    <i class="fa fa-play text-2xl"></i>
-                </button>
-                <button id="next-song" class="text-muted hover:text-white transition-colors">
-                    <i class="fa fa-step-forward text-xl"></i>
-                </button>
-            </div>
+            <h2 id="song-title" class="text-xl font-bold text-white mb-1 text-shadow">东风破</h2>
+            <p id="song-artist" class="text-muted mb-4 text-shadow">周杰伦</p>
             
             <!-- 音量控制 -->
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 mb-6">
                 <button id="mute" class="text-muted hover:text-white transition-colors">
                     <i class="fa fa-volume-up"></i>
                 </button>
                 <div class="flex-1 h-1 bg-gray-700 rounded-full overflow-hidden cursor-pointer" id="volume-container">
-                    <div class="h-full w-3/4 bg-muted rounded-full transition-all duration-100" id="volume-bar"></div>
+                    <div class="h-full w-3/4 bg-primary rounded-full transition-all duration-100" id="volume-bar"></div>
                 </div>
             </div>
+            
+            <!-- 控制按钮 -->
+            <div class="flex items-center justify-center gap-6 mb-2">
+                <button id="play-pause" class="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:bg-secondary transition-all duration-300">
+                    <i class="fa fa-play text-2xl"></i>
+                </button>
+            </div>
+            
+            <!-- 提示信息 -->
+            <p class="text-xs text-muted text-center mt-4">
+                <i class="fa fa-info-circle mr-1"></i> 浏览器可能需要您先点击播放按钮才能自动播放
+            </p>
         </div>
-    </div>
-    
-    <!-- 添加音乐表单 -->
-    <div class="w-full max-w-md mt-6 bg-dark/70 backdrop-blur rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.3)] p-4 z-10">
-        <h3 class="text-lg font-bold text-white mb-3 text-shadow">添加音乐</h3>
-        <form id="add-song-form" class="space-y-4">
-            <div>
-                <label for="song-name" class="block text-sm font-medium text-muted mb-1">歌曲名称</label>
-                <input type="text" id="song-name" class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="输入歌曲名称">
-            </div>
-            <div>
-                <label for="song-artist" class="block text-sm font-medium text-muted mb-1">艺术家</label>
-                <input type="text" id="song-artist" class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="输入艺术家名称">
-            </div>
-            <div>
-                <label for="song-url" class="block text-sm font-medium text-muted mb-1">音乐链接</label>
-                <input type="url" id="song-url" class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="输入音乐文件URL (MP3, OGG等)">
-            </div>
-            <div>
-                <label for="cover-url" class="block text-sm font-medium text-muted mb-1">封面链接 (可选)</label>
-                <input type="url" id="cover-url" class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="输入封面图片URL (JPG, PNG等)">
-            </div>
-            <button type="submit" class="w-full py-2 bg-primary hover:bg-secondary text-white font-medium rounded-lg transition-colors duration-300 shadow-lg">
-                添加到播放列表
-            </button>
-        </form>
-    </div>
-    
-    <!-- 播放列表 -->
-    <div class="w-full max-w-md mt-6 bg-dark/70 backdrop-blur rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.3)] p-4 z-10">
-        <div class="flex justify-between items-center mb-3">
-            <h3 class="text-lg font-bold text-white text-shadow">播放列表</h3>
-            <button id="clear-playlist" class="text-sm text-muted hover:text-white transition-colors">
-                <i class="fa fa-trash-o mr-1"></i> 清空
-            </button>
-        </div>
-        <ul id="playlist" class="space-y-3 max-h-[300px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
-            <!-- 音乐列表将通过JavaScript动态生成 -->
-            <li class="text-center text-muted py-4">
-                <i class="fa fa-music block text-2xl mb-2"></i>
-                播放列表为空
-            </li>
-        </ul>
     </div>
     
     <!-- 页脚 -->
     <footer class="mt-8 text-center text-muted text-sm z-10">
-        <p>沉浸式音乐播放器 &copy; 2023</p>
+        <p>旋转唱片音乐播放器 © 2023</p>
     </footer>
     
     <!-- 音频元素 -->
-    <audio id="audio-player" loop>
-        <!-- 音频源将通过JavaScript动态设置 -->
+    <audio id="audio-player" loop="">
+        <!-- 音乐链接将自动设置为: https://s19.aconvert.com/convert/p3r68-cdx67/lqpg6-94src.mp3 -->
     </audio>
     
     <!-- 消息提示 -->
@@ -227,26 +192,16 @@
         const audioPlayer = document.getElementById('audio-player');
         const playPauseBtn = document.getElementById('play-pause');
         const playPauseBigBtn = document.getElementById('play-pause-big');
-        const progressBar = document.getElementById('progress-bar');
-        const progressContainer = document.getElementById('progress-container');
-        const currentTimeEl = document.getElementById('current-time');
-        const totalTimeEl = document.getElementById('total-time');
         const volumeBar = document.getElementById('volume-bar');
         const volumeContainer = document.getElementById('volume-container');
         const muteBtn = document.getElementById('mute');
         const albumCover = document.getElementById('album-cover');
-        const playlist = document.getElementById('playlist');
-        const prevSongBtn = document.getElementById('prev-song');
-        const nextSongBtn = document.getElementById('next-song');
-        const addSongForm = document.getElementById('add-song-form');
         const coverUpload = document.getElementById('cover-upload');
-        const clearPlaylistBtn = document.getElementById('clear-playlist');
         const toast = document.getElementById('toast');
         const bgImage = document.getElementById('bg-image');
         
-        // 音乐数据
-        let songs = [];
-        let currentSongIndex = -1;
+        // 设置默认音乐
+        audioPlayer.src = 'https://s19.aconvert.com/convert/p3r68-cdx67/lqpg6-94src.mp3';
         
         // 显示提示消息
         function showToast(message, type = 'info') {
@@ -273,111 +228,6 @@
                 toast.classList.remove('opacity-100');
                 toast.classList.add('opacity-0');
             }, 3000);
-        }
-        
-        // 格式化时间
-        function formatTime(seconds) {
-            if (isNaN(seconds)) return '0:00';
-            
-            const minutes = Math.floor(seconds / 60);
-            const remainingSeconds = Math.floor(seconds % 60);
-            return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
-        }
-        
-        // 更新背景图片
-        function updateBackground(coverUrl) {
-            if (coverUrl) {
-                bgImage.src = coverUrl;
-            } else {
-                bgImage.src = 'https://picsum.photos/seed/music/1920/1080';
-            }
-        }
-        
-        // 更新歌曲信息
-        function updateSongInfo(index) {
-            if (index < 0 || index >= songs.length) return;
-            
-            const song = songs[index];
-            
-            document.getElementById('song-title').textContent = song.title || '未知歌曲';
-            document.getElementById('song-artist').textContent = song.artist || '未知艺术家';
-            
-            // 检查封面URL是否有效
-            if (song.cover) {
-                const img = new Image();
-                img.onload = function() {
-                    albumCover.src = song.cover;
-                    updateBackground(song.cover);
-                };
-                img.onerror = function() {
-                    albumCover.src = 'https://picsum.photos/seed/music/800/800';
-                    updateBackground('https://picsum.photos/seed/music/1920/1080');
-                    showToast('封面图片加载失败，使用默认封面', 'error');
-                };
-                img.src = song.cover;
-            } else {
-                albumCover.src = 'https://picsum.photos/seed/music/800/800';
-                updateBackground('https://picsum.photos/seed/music/1920/1080');
-            }
-            
-            // 设置音频源
-            audioPlayer.src = song.audio;
-            
-            // 更新播放列表高亮
-            const playlistItems = document.querySelectorAll('#playlist li:not(.empty)');
-            playlistItems.forEach((item, i) => {
-                if (i === index) {
-                    item.querySelector('i').className = 'fa fa-check-circle text-primary';
-                    item.classList.add('bg-primary/10');
-                } else {
-                    item.querySelector('i').className = 'fa fa-play-circle text-muted';
-                    item.classList.remove('bg-primary/10');
-                }
-            });
-            
-            // 重置播放状态
-            audioPlayer.pause();
-            playPauseBtn.innerHTML = '<i class="fa fa-play text-2xl"></i>';
-            playPauseBigBtn.innerHTML = '<i class="fa fa-play text-white text-5xl"></i>';
-            albumCover.classList.add('paused');
-            progressBar.style.width = '0%';
-            currentTimeEl.textContent = '0:00';
-            totalTimeEl.textContent = '0:00';
-            
-            // 加载新歌曲
-            audioPlayer.load();
-            
-            // 尝试自动播放（可能会被浏览器阻止）
-            audioPlayer.play().catch(error => {
-                console.log('自动播放被阻止:', error);
-                showToast('由于浏览器限制，需要手动点击播放按钮', 'info');
-            });
-        }
-        
-        // 更新播放进度
-        function updateProgress() {
-            const { currentTime, duration } = audioPlayer;
-            if (isNaN(duration)) return;
-            
-            const progressPercent = (currentTime / duration) * 100;
-            progressBar.style.width = `${progressPercent}%`;
-            
-            // 更新当前时间显示
-            currentTimeEl.textContent = formatTime(currentTime);
-            
-            // 更新总时长显示
-            totalTimeEl.textContent = formatTime(duration);
-        }
-        
-        // 设置播放进度
-        function setProgress(e) {
-            const width = progressContainer.clientWidth;
-            const clickX = e.offsetX;
-            const duration = audioPlayer.duration;
-            
-            if (duration) {
-                audioPlayer.currentTime = (clickX / width) * duration;
-            }
         }
         
         // 设置音量
@@ -430,179 +280,6 @@
             }
         }
         
-        // 播放下一首
-        function playNext() {
-            if (songs.length === 0) return;
-            
-            currentSongIndex = (currentSongIndex + 1) % songs.length;
-            updateSongInfo(currentSongIndex);
-        }
-        
-        // 播放上一首
-        function playPrevious() {
-            if (songs.length === 0) return;
-            
-            currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
-            updateSongInfo(currentSongIndex);
-        }
-        
-        // 生成播放列表
-        function generatePlaylist() {
-            playlist.innerHTML = '';
-            
-            if (songs.length === 0) {
-                playlist.innerHTML = `
-                    <li class="text-center text-muted py-4 empty">
-                        <i class="fa fa-music block text-2xl mb-2"></i>
-                        播放列表为空
-                    </li>
-                `;
-                return;
-            }
-            
-            songs.forEach((song, index) => {
-                const li = document.createElement('li');
-                li.className = 'flex items-center justify-between p-3 bg-gray-800/50 rounded-lg cursor-pointer hover:bg-primary/10 transition-colors';
-                li.dataset.index = index;
-                
-                li.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded overflow-hidden bg-gray-700 flex-shrink-0">
-                            <img src="${song.cover || 'https://picsum.photos/seed/song/100/100'}" alt="${song.title}" class="w-full h-full object-cover">
-                        </div>
-                        <div class="overflow-hidden">
-                            <p class="font-medium text-white truncate">${song.title || '未知歌曲'}</p>
-                            <p class="text-sm text-muted truncate">${song.artist || '未知艺术家'}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <i class="fa fa-play-circle text-muted"></i>
-                        <button class="delete-song text-muted hover:text-red-500 transition-colors" data-index="${index}">
-                            <i class="fa fa-times"></i>
-                        </button>
-                    </div>
-                `;
-                
-                li.addEventListener('click', () => {
-                    currentSongIndex = index;
-                    updateSongInfo(currentSongIndex);
-                });
-                
-                playlist.appendChild(li);
-            });
-            
-            // 高亮当前歌曲
-            if (currentSongIndex >= 0 && currentSongIndex < songs.length) {
-                const currentItem = playlist.querySelector(`li[data-index="${currentSongIndex}"]`);
-                if (currentItem) {
-                    currentItem.querySelector('i').className = 'fa fa-check-circle text-primary';
-                    currentItem.classList.add('bg-primary/10');
-                }
-            }
-            
-            // 添加删除歌曲事件监听
-            document.querySelectorAll('.delete-song').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation(); // 阻止事件冒泡到li元素
-                    const index = parseInt(btn.dataset.index);
-                    deleteSong(index);
-                });
-            });
-        }
-        
-        // 添加歌曲
-        function addSong(song) {
-            // 验证必填字段
-            if (!song.title || !song.audio) {
-                showToast('歌曲名称和音乐链接是必填项', 'error');
-                return false;
-            }
-            
-            // 验证URL格式
-            try {
-                if (song.audio) new URL(song.audio);
-                if (song.cover) new URL(song.cover);
-            } catch (error) {
-                showToast('无效的URL格式', 'error');
-                return false;
-            }
-            
-            songs.push(song);
-            generatePlaylist();
-            
-            // 如果是第一首歌曲，自动播放
-            if (songs.length === 1) {
-                currentSongIndex = 0;
-                updateSongInfo(currentSongIndex);
-            }
-            
-            showToast('歌曲已添加到播放列表', 'success');
-            return true;
-        }
-        
-        // 删除歌曲
-        function deleteSong(index) {
-            if (index < 0 || index >= songs.length) return;
-            
-            // 如果删除的是当前播放的歌曲
-            if (index === currentSongIndex) {
-                audioPlayer.pause();
-                
-                // 如果还有其他歌曲，播放下一首
-                if (songs.length > 1) {
-                    const nextIndex = (index + 1) % (songs.length - 1);
-                    currentSongIndex = nextIndex;
-                    updateSongInfo(currentSongIndex);
-                } else {
-                    // 没有其他歌曲了
-                    currentSongIndex = -1;
-                    document.getElementById('song-title').textContent = '未选择歌曲';
-                    document.getElementById('song-artist').textContent = '请添加音乐';
-                    albumCover.src = 'https://picsum.photos/seed/music/800/800';
-                    playPauseBtn.innerHTML = '<i class="fa fa-play text-2xl"></i>';
-                    playPauseBigBtn.innerHTML = '<i class="fa fa-play text-white text-5xl"></i>';
-                    albumCover.classList.add('paused');
-                    progressBar.style.width = '0%';
-                    currentTimeEl.textContent = '0:00';
-                    totalTimeEl.textContent = '0:00';
-                    updateBackground('https://picsum.photos/seed/music/1920/1080');
-                }
-            } else if (index < currentSongIndex) {
-                // 如果删除的歌曲在当前歌曲之前，更新当前索引
-                currentSongIndex--;
-            }
-            
-            // 从数组中删除歌曲
-            songs.splice(index, 1);
-            generatePlaylist();
-            
-            showToast('歌曲已从播放列表中移除', 'info');
-        }
-        
-        // 清空播放列表
-        function clearPlaylist() {
-            if (songs.length === 0) return;
-            
-            audioPlayer.pause();
-            songs = [];
-            currentSongIndex = -1;
-            generatePlaylist();
-            
-            // 重置播放器信息
-            document.getElementById('song-title').textContent = '未选择歌曲';
-            document.getElementById('song-artist').textContent = '请添加音乐';
-            albumCover.src = 'https://picsum.photos/seed/music/800/800';
-            playPauseBtn.innerHTML = '<i class="fa fa-play text-2xl"></i>';
-            playPauseBigBtn.innerHTML = '<i class="fa fa-play text-white text-5xl"></i>';
-            albumCover.classList.add('paused');
-            progressBar.style.width = '0%';
-            currentTimeEl.textContent = '0:00';
-            totalTimeEl.textContent = '0:00';
-            updateBackground('https://picsum.photos/seed/music/1920/1080');
-            
-            showToast('播放列表已清空', 'info');
-        }
-        
         // 上传专辑封面
         function uploadCover(file) {
             if (!file) return;
@@ -616,17 +293,13 @@
             const reader = new FileReader();
             
             reader.onload = function(e) {
-                // 更新当前歌曲的封面
-                if (currentSongIndex >= 0 && currentSongIndex < songs.length) {
-                    songs[currentSongIndex].cover = e.target.result;
-                    albumCover.src = e.target.result;
-                    updateBackground(e.target.result);
-                    generatePlaylist();
-                    showToast('封面已更新', 'success');
-                } else {
-                    albumCover.src = e.target.result;
-                    showToast('封面已预览，添加歌曲时将使用此封面', 'info');
-                }
+                // 更新专辑封面
+                albumCover.src = e.target.result;
+                
+                // 更新背景图片
+                bgImage.src = e.target.result;
+                
+                showToast('封面已更新', 'success');
             };
             
             reader.readAsDataURL(file);
@@ -635,52 +308,8 @@
         // 事件监听
         playPauseBtn.addEventListener('click', togglePlayPause);
         playPauseBigBtn.addEventListener('click', togglePlayPause);
-        audioPlayer.addEventListener('timeupdate', updateProgress);
-        progressContainer.addEventListener('click', setProgress);
         volumeContainer.addEventListener('click', setVolume);
         muteBtn.addEventListener('click', toggleMute);
-        prevSongBtn.addEventListener('click', playPrevious);
-        nextSongBtn.addEventListener('click', playNext);
-        clearPlaylistBtn.addEventListener('click', clearPlaylist);
-        
-        // 歌曲结束后自动播放下一首
-        audioPlayer.addEventListener('ended', playNext);
-        
-        // 键盘快捷键
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') {
-                togglePlayPause();
-            } else if (e.code === 'ArrowRight') {
-                audioPlayer.currentTime += 10; // 快进10秒
-            } else if (e.code === 'ArrowLeft') {
-                audioPlayer.currentTime -= 10; // 快退10秒
-            }
-        });
-        
-        // 添加歌曲表单提交
-        addSongForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            
-            const title = document.getElementById('song-name').value.trim();
-            const artist = document.getElementById('song-artist').value.trim();
-            const audioUrl = document.getElementById('song-url').value.trim();
-            const coverUrl = document.getElementById('cover-url').value.trim();
-            
-            // 如果当前有预览封面且用户没有提供封面URL，则使用预览封面
-            const cover = coverUrl || (albumCover.src !== 'https://picsum.photos/seed/music/800/800' ? albumCover.src : null);
-            
-            const song = {
-                title,
-                artist,
-                audio: audioUrl,
-                cover
-            };
-            
-            if (addSong(song)) {
-                // 清空表单
-                addSongForm.reset();
-            }
-        });
         
         // 封面上传
         coverUpload.addEventListener('change', (e) => {
@@ -695,9 +324,14 @@
         });
         
         // 初始化播放器
-        generatePlaylist();
         audioPlayer.volume = 0.75; // 默认音量
-        updateBackground('https://picsum.photos/seed/music/1920/1080');
+        
+        // 尝试自动播放
+        audioPlayer.play().catch(error => {
+            console.log('自动播放被阻止:', error);
+            showToast('由于浏览器限制，需要手动点击播放按钮', 'info');
+        });
     </script>
-</body>
-</html>
+
+
+    </body></html>
