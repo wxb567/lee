@@ -1,204 +1,78 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>网易云音乐播放器 - 高斯模糊背景</title>
-    <style>
-        /* 基础样式 */
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f8f9fa;
-            overflow: hidden; /* 防止滚动条出现 */
-        }
-        
-        /* 背景图片容器 */
-        .background-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            background-image: url('https://picsum.photos/id/1035/1920/1080');
-            background-size: cover;
-            background-position: center;
-            filter: blur(10px);
-            transform: scale(1.1); /* 放大以消除模糊边缘 */
-        }
-        
-        /* 半透明覆盖层 */
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.2); /* 半透明黑色覆盖层 */
-            z-index: -1;
-        }
-        
-        /* 播放器容器 - 响应式设计 */
-        .player-container {
-            background-color: rgba(255, 255, 255, 0.85); /* 半透明白色背景 */
-            backdrop-filter: blur(8px); /* 增强模糊效果 */
-            border-radius: 16px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
-            max-width: 100%;
-            width: 350px;
-            box-sizing: border-box;
-            position: relative;
-            transition: all 0.3s ease;
-            margin: 20px;
-        }
-        
-        /* 标题样式 - 触控友好 */
-        .title {
-            text-align: center;
-            margin: 0;
-            padding: 16px 0;
-            color: #333;
-            font-size: 18px;
-            font-weight: 600;
-            background-color: rgba(245, 245, 245, 0.7); /* 半透明背景 */
-            border-bottom: 1px solid rgba(238, 238, 238, 0.7); /* 半透明边框 */
-        }
-        
-        /* 网易云音乐播放器 */
-        .music-player {
-            width: 100%;
-            height: 86px;
-            border: none;
-            margin: 0;
-            display: block;
-        }
-        
-        /* 移动端优化 */
-        @media (max-width: 400px) {
-            .player-container {
-                width: calc(100% - 40px);
-                border-radius: 10px;
-            }
-            
-            .title {
-                font-size: 16px;
-                padding: 12px 0;
-            }
-        }
-        
-        /* 播放控制按钮 - 移动端友好 */
-        .control-buttons {
-            display: flex;
-            justify-content: center;
-            margin: 16px 0;
-            gap: 20px;
-        }
-        
-        .control-button {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background-color: rgba(22, 93, 255, 0.9); /* 半透明主色调 */
-            color: white;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(22, 93, 255, 0.3);
-            transition: all 0.2s ease;
-        }
-        
-        .control-button:hover {
-            background-color: rgba(14, 71, 210, 0.95); /* 半透明深色调 */
-            transform: translateY(-2px);
-        }
-        
-        .control-button i {
-            font-size: 20px;
-        }
-    </style>
-</head>
-<body>
-    <!-- 高斯模糊背景 -->
-    <div class="background-container"></div>
-    <div class="overlay"></div>
-    
-    <div class="player-container">
-        <h1 class="title">网易云音乐</h1>
-        <!-- 网易云音乐播放器 - 包含mute参数以支持自动播放 -->
-        <iframe class="music-player" frameborder="no" border="0" marginwidth="0" marginheight="0" 
-                src="//music.163.com/outchain/player?type=2&id=2647582218&auto=1&height=66&mute=1"></iframe>
-        
-        <!-- 移动端播放控制按钮 -->
-        <div class="control-buttons">
-            <button class="control-button" id="prev-song">
-                <i class="fa fa-step-backward"></i>
-            </button>
-            <button class="control-button" id="play-pause">
-                <i class="fa fa-pause"></i>
-            </button>
-            <button class="control-button" id="next-song">
-                <i class="fa fa-step-forward"></i>
-            </button>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>音乐播放器</title>
+    <link rel="stylesheet" href="./css/font-awesome.min.css" />
+    <link rel="stylesheet" href="./css/index.css" />
+  </head>
+  <body>
+    <!-- 音乐播放器 -->
+    <div class="player-warp">
+      <!-- 歌曲信息卡片 -->
+      <div class="player-info">
+        <div class="info">
+          <div class="name">我记得</div>
+          <div class="singer-album">赵雷 - 署前街少年</div>
+          <!-- 进度条 -->
+          <div class="music_progress">
+            <div class="music_progress_top">
+              <span class="current-time">00:00</span>
+              <span class="time">05:29</span>
+            </div>
+            <div class="music_progress_bar">
+              <div class="music_progress_line"></div>
+            </div>
+          </div>
         </div>
+      </div>
+      <!-- 音乐控制器 -->
+      <div class="player-control">
+        <!-- 封面唱片 -->
+        <div class="cover">
+          <img
+            src="http://p1.music.126.net/FCWD6ibS2JK2B3QAnXuzwQ==/109951167805892385.jpg?param=300x300"
+            alt="封面"
+          />
+        </div>
+        <!-- 控制按钮 -->
+        <div class="control">
+          <i id="prevBtn" class="fa fa-step-backward"></i>
+          <i id="playBtn" class="fa fa-play"></i>
+          <i id="nextBtn" class="fa fa-step-forward"></i>
+          <i id="openModal" class="fa fa-reorder"></i>
+        </div>
+      </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/js/font-awesome.min.js"></script>
-    <script>
-        // 获取DOM元素
-        const musicPlayer = document.querySelector('.music-player');
-        const playPauseBtn = document.getElementById('play-pause');
-        const prevSongBtn = document.getElementById('prev-song');
-        const nextSongBtn = document.getElementById('next-song');
-        
-        // 歌曲ID列表 - 可替换为你喜欢的歌曲
-        const songIds = ['2647582218', '150454', '26425119'];
-        let currentSongIndex = 0;
-        
-        // 更新歌曲
-        function updateSong(id) {
-            musicPlayer.src = `//music.163.com/outchain/player?type=2&id=${id}&auto=1&height=66&mute=1`;
-            // 重新加载iframe以更新歌曲
-            const oldSrc = musicPlayer.src;
-            musicPlayer.src = '';
-            musicPlayer.src = oldSrc;
-        }
-        
-        // 播放/暂停按钮事件
-        playPauseBtn.addEventListener('click', function() {
-            // 由于iframe跨域限制，无法直接控制播放状态
-            // 这里通过重新加载src来模拟播放/暂停
-            if (this.innerHTML.includes('fa-pause')) {
-                this.innerHTML = '<i class="fa fa-play"></i>';
-                // 暂停播放 - 实际上是静音
-                musicPlayer.src = musicPlayer.src.replace('mute=1', 'mute=1&pause=1');
-            } else {
-                this.innerHTML = '<i class="fa fa-pause"></i>';
-                // 播放音乐
-                musicPlayer.src = musicPlayer.src.replace('&pause=1', '');
-            }
-        });
-        
-        // 上一首按钮事件
-        prevSongBtn.addEventListener('click', function() {
-            currentSongIndex = (currentSongIndex - 1 + songIds.length) % songIds.length;
-            updateSong(songIds[currentSongIndex]);
-            playPauseBtn.innerHTML = '<i class="fa fa-pause"></i>';
-        });
-        
-        // 下一首按钮事件
-        nextSongBtn.addEventListener('click', function() {
-            currentSongIndex = (currentSongIndex + 1) % songIds.length;
-            updateSong(songIds[currentSongIndex]);
-            playPauseBtn.innerHTML = '<i class="fa fa-pause"></i>';
-        });
-        
-        // 初始化
-        updateSong(songIds[currentSongIndex]);
-    </script>
-</body>
+    <!-- 页面背景 -->
+    <div class="mask_bg"></div>
+
+    <!-- 模态框 -->
+    <div class="modal">
+      <div class="modal-box">
+        <div class="modal-box-top">
+          <div class="modal-title">音乐列表</div>
+          <div class="modal-close">
+            <i class="fa fa-remove"></i>
+          </div>
+        </div>
+        <div class="modal-wrapper">
+          <ul class="music-list">
+            <!-- <li>
+              <span>01. 我记得 - 赵雷</span>
+              <span class="fa fa-play-circle play-circle"></span>
+            </li> -->
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <audio src=""></audio>
+
+    <script src="./js/jquery.js"></script>
+    <script src="./js/index.js"></script>
+  </body>
 </html>
