@@ -1,20 +1,62 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-    <title>图片展示网站</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网易云音乐播放器</title>
     <style>
-        img {
-            display: block;
-            margin: 20px auto;
-            max-width: 25%;
-            height: auto;
+        /* 基础样式 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f5f5f5;
+            background-image: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+        }
+        
+        /* 播放器容器 */
+        .player-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            padding: 20px;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        
+        /* 标题样式 */
+        .title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 400px) {
+            .player-container {
+                padding: 10px;
+                width: 90%;
+            }
+            
+            .title {
+                font-size: 20px;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>放一个李文琳在这里站岗</h1>
-    
-    <img src="example.jpg" alt="示例图片">
-    
+    <div class="player-container">
+        <h1 class="title">正在播放音乐</h1>
+        <!-- 网易云音乐播放器 -->
+        <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86" 
+                src="//music.163.com/outchain/player?type=2&id=2647582218&auto=1&height=66"></iframe>
+    </div>
 </body>
 </html>
