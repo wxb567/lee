@@ -1,7 +1,8 @@
-<html lang="zh-CN"><head>
+<html lang="zh-CN">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>旋转唱片音乐播放器</title>
+    <title>我的音乐播放器</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     
@@ -124,7 +125,7 @@
     
     <!-- 页面标题 -->
     <h1 class="text-[clamp(1.5rem,5vw,2.5rem)] font-bold text-white mb-6 text-center text-shadow z-10">
-        <i class="fa fa-music text-primary mr-2"></i>旋转唱片音乐播放器
+        🎵
     </h1>
     
     <!-- 播放器主体 -->
@@ -134,11 +135,6 @@
             <div class="absolute inset-0 record-groove"></div>
             <img id="album-cover" src="https://y.qq.com/music/photo_new/T002R300x300M000000MkMni19ClKG_5.jpg?max_age=2592000" alt="专辑封面" class="w-[85%] h-[85%] object-cover vinyl-rotate paused rounded-full shadow-[0_0_20px_rgba(0,0,0,0.3)] z-5">
             <div class="record-center"></div>
-            <!-- 封面上传按钮 -->
-            <label for="cover-upload" class="absolute bottom-3 right-3 w-10 h-10 bg-primary/80 rounded-full flex items-center justify-center cursor-pointer hover:bg-primary transition-colors shadow-lg z-10">
-                <i class="fa fa-camera text-white"></i>
-                <input id="cover-upload" type="file" accept="image/*" class="hidden">
-            </label>
             <!-- 播放/暂停按钮叠加在封面中央 -->
             <button id="play-pause-big" class="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 hover:opacity-100 transition-opacity duration-300 z-10">
                 <i class="fa fa-play text-white text-5xl"></i>
@@ -148,7 +144,16 @@
         <!-- 歌曲信息 -->
         <div class="p-6">
             <h2 id="song-title" class="text-xl font-bold text-white mb-1 text-shadow">东风破</h2>
-            <p id="song-artist" class="text-muted mb-4 text-shadow">周杰伦</p>
+            <p id="song-artist" class="text-muted mb-2 text-shadow">周杰伦</p>
+            
+            <!-- 播放进度条 -->
+            <div class="flex items-center justify-between mb-4">
+                <span id="current-time" class="text-sm text-muted">00:00</span>
+                <div class="flex-1 h-1 bg-gray-700 rounded-full overflow-hidden cursor-pointer" id="progress-container">
+                    <div class="h-full w-0 bg-primary rounded-full transition-all duration-100" id="progress-bar"></div>
+                </div>
+                <span id="total-time" class="text-sm text-muted">00:00</span>
+            </div>
             
             <!-- 音量控制 -->
             <div class="flex items-center gap-3 mb-6">
@@ -176,7 +181,7 @@
     
     <!-- 页脚 -->
     <footer class="mt-8 text-center text-muted text-sm z-10">
-        <p>旋转唱片音乐播放器 © 2023</p>
+        <p>我的音乐播放器 © 2023</p>
     </footer>
     
     <!-- 音频元素 -->
@@ -196,9 +201,12 @@
         const volumeContainer = document.getElementById('volume-container');
         const muteBtn = document.getElementById('mute');
         const albumCover = document.getElementById('album-cover');
-        const coverUpload = document.getElementById('cover-upload');
         const toast = document.getElementById('toast');
         const bgImage = document.getElementById('bg-image');
+        const progressBar = document.getElementById('progress-bar');
+        const progressContainer = document.getElementById('progress-container');
+        const currentTimeEl = document.getElementById('current-time');
+        const totalTimeEl = document.getElementById('total-time');
         
         // 设置默认音乐
         audioPlayer.src = 'https://s19.aconvert.com/convert/p3r68-cdx67/lqpg6-94src.mp3';
@@ -228,6 +236,26 @@
                 toast.classList.remove('opacity-100');
                 toast.classList.add('opacity-0');
             }, 3000);
+        }
+        
+        // 格式化时间为 mm:ss 格式
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        // 更新进度条和时间显示
+        function updateProgress() {
+            if (audioPlayer.duration > 0) {
+                // 计算进度百分比
+                const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                progressBar.style.width = `${progress}%`;
+                
+                // 更新时间显示
+                currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
+                totalTimeEl.textContent = formatTime(audioPlayer.duration);
+            }
         }
         
         // 设置音量
@@ -280,29 +308,13 @@
             }
         }
         
-        // 上传专辑封面
-        function uploadCover(file) {
-            if (!file) return;
+        // 点击进度条跳转播放位置
+        function seekToPosition(e) {
+            const width = progressContainer.clientWidth;
+            const clickX = e.offsetX;
+            const seekTime = (clickX / width) * audioPlayer.duration;
             
-            // 验证文件类型
-            if (!file.type.match('image.*')) {
-                showToast('请选择图片文件', 'error');
-                return;
-            }
-            
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                // 更新专辑封面
-                albumCover.src = e.target.result;
-                
-                // 更新背景图片
-                bgImage.src = e.target.result;
-                
-                showToast('封面已更新', 'success');
-            };
-            
-            reader.readAsDataURL(file);
+            audioPlayer.currentTime = seekTime;
         }
         
         // 事件监听
@@ -310,18 +322,11 @@
         playPauseBigBtn.addEventListener('click', togglePlayPause);
         volumeContainer.addEventListener('click', setVolume);
         muteBtn.addEventListener('click', toggleMute);
+        progressContainer.addEventListener('click', seekToPosition);
         
-        // 封面上传
-        coverUpload.addEventListener('change', (e) => {
-            if (e.target.files && e.target.files[0]) {
-                uploadCover(e.target.files[0]);
-            }
-        });
-        
-        // 点击封面打开上传对话框
-        albumCover.addEventListener('click', () => {
-            coverUpload.click();
-        });
+        // 进度更新监听
+        audioPlayer.addEventListener('timeupdate', updateProgress);
+        audioPlayer.addEventListener('loadedmetadata', updateProgress);
         
         // 初始化播放器
         audioPlayer.volume = 0.75; // 默认音量
@@ -332,6 +337,5 @@
             showToast('由于浏览器限制，需要手动点击播放按钮', 'info');
         });
     </script>
-
-
-    </body></html>
+</body>
+</html>
