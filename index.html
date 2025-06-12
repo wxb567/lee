@@ -17,7 +17,7 @@
                         accent: '#0FC6C2',
                         dark: '#1D2129',
                         light: '#F2F3F5',
-                        glass: '#E0F2FF', // 浅蓝色背景
+                        glass: '#E0F2FF',
                     },
                     fontFamily: {
                         inter: ['Inter', 'system-ui', 'sans-serif'],
@@ -44,7 +44,7 @@
                 -webkit-backdrop-filter: blur(20px);
             }
             .glass-effect {
-                background: rgba(224, 242, 255, 0.7); /* 浅蓝色毛玻璃背景 */
+                background: rgba(224, 242, 255, 0.7);
                 backdrop-filter: blur(16px);
                 -webkit-backdrop-filter: blur(16px);
             }
@@ -87,7 +87,7 @@
         /* 基础样式 */
         body {
             overflow-x: hidden;
-            background: linear-gradient(135deg, #E0F2FF 0%, #BBDEFB 100%); /* 渐变浅蓝色背景 */
+            background: linear-gradient(135deg, #E0F2FF 0%, #BBDEFB 100%);
             min-height: 100vh;
         }
         
@@ -100,6 +100,7 @@
         /* 歌词滚动动画 */
         .lyric-container {
             transition: transform 0.5s ease;
+            height: 120px; /* 固定歌词容器高度以实现滚动 */
         }
     </style>
 </head>
@@ -122,30 +123,22 @@
             </button>
         </div>
         
-        <!-- 歌词显示区域 -->
-        <div id="lyric-container" class="lyric-container h-40 overflow-hidden flex items-center justify-center p-2">
+        <!-- 歌曲信息 - 居中显示 -->
+        <div class="p-4 flex flex-col items-center">
+            <h2 id="song-title" class="text-xl font-bold text-dark mb-1 text-center">东风破</h2>
+            <p id="song-artist" class="text-muted mb-4 text-center">周杰伦</p>
+        </div>
+        
+        <!-- 歌词显示区域 - 滚动效果 -->
+        <div id="lyric-container" class="lyric-container h-40 overflow-y-auto p-2">
             <div id="lyrics" class="text-center space-y-3 text-[clamp(0.9rem,3vw,1.1rem)]">
                 <p class="lyric-line">点击播放按钮开始播放音乐</p>
             </div>
         </div>
         
-        <!-- 歌曲信息 -->
-        <div class="p-6">
-            <h2 id="song-title" class="text-xl font-bold text-dark mb-1">东风破</h2>
-            <p id="song-artist" class="text-muted mb-4">周杰伦</p>
-            
-            <!-- 播放进度条 -->
-            <div class="flex items-center justify-between mb-4">
-                <span id="current-time" class="text-sm text-muted">00:00</span>
-                <div class="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden cursor-pointer" id="progress-container">
-                    <div class="h-full w-0 bg-primary rounded-full transition-all duration-100" id="progress-bar"></div>
-                    <div class="h-full w-0 bg-secondary/50 absolute top-0 left-0 rounded-full" id="buffer-bar"></div>
-                </div>
-                <span id="total-time" class="text-sm text-muted">00:00</span>
-            </div>
-            
-            <!-- 控制按钮 -->
-            <div class="flex items-center justify-center gap-4 mb-4">
+        <!-- 控制按钮 -->
+        <div class="p-6 flex flex-col items-center">
+            <div class="flex items-center justify-center gap-4 mb-6">
                 <button id="prev-song" class="w-10 h-10 rounded-full bg-white/30 flex items-center justify-center hover:bg-white/50 transition-colors">
                     <i class="fa fa-step-backward"></i>
                 </button>
@@ -158,7 +151,7 @@
             </div>
             
             <!-- 音量控制 -->
-            <div class="flex items-center gap-3 justify-center">
+            <div class="flex items-center gap-3">
                 <button id="mute" class="text-muted hover:text-primary transition-colors">
                     <i class="fa fa-volume-up"></i>
                 </button>
@@ -192,11 +185,6 @@
         const muteBtn = document.getElementById('mute');
         const albumCover = document.getElementById('album-cover');
         const toast = document.getElementById('toast');
-        const progressBar = document.getElementById('progress-bar');
-        const bufferBar = document.getElementById('buffer-bar');
-        const progressContainer = document.getElementById('progress-container');
-        const currentTimeEl = document.getElementById('current-time');
-        const totalTimeEl = document.getElementById('total-time');
         const lyricsEl = document.getElementById('lyrics');
         const lyricContainer = document.getElementById('lyric-container');
         const prevSongBtn = document.getElementById('prev-song');
@@ -258,7 +246,6 @@
                         "[04:44.62]篱笆外的古道我牵着你走过\n" +
                         "[04:50.92]荒烟漫草的年头 就连分手都很沉默"
             },
-            // 可扩展更多歌曲...
         ];
         
         let currentSongIndex = 0;
@@ -270,7 +257,6 @@
         function showToast(message, type = 'info') {
             toast.textContent = message;
             
-            // 设置提示类型样式
             if (type === 'success') {
                 toast.classList.remove('bg-dark/80');
                 toast.classList.add('bg-green-500');
@@ -282,18 +268,16 @@
                 toast.classList.add('bg-dark/80');
             }
             
-            // 显示提示
             toast.classList.remove('opacity-0');
             toast.classList.add('opacity-100');
             
-            // 3秒后隐藏
             setTimeout(() => {
                 toast.classList.remove('opacity-100');
                 toast.classList.add('opacity-0');
             }, 3000);
         }
         
-        // 格式化时间为 mm:ss 格式
+        // 格式化时间为 mm:ss 格式（保留用于歌词时间解析）
         function formatTime(seconds) {
             const minutes = Math.floor(seconds / 60);
             const secs = Math.floor(seconds % 60);
@@ -320,88 +304,8 @@
                 }
             });
             
-            // 按时间排序
             result.sort((a, b) => a.time - b.time);
             return result;
-        }
-        
-        // 更新进度条和时间显示
-        function updateProgress() {
-            if (audioPlayer.duration > 0) {
-                // 计算进度百分比
-                const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
-                progressBar.style.width = `${progress}%`;
-                
-                // 更新缓冲条
-                const buffered = (audioPlayer.buffered.end(audioPlayer.buffered.length - 1) / audioPlayer.duration) * 100;
-                bufferBar.style.width = `${Math.min(progress, buffered)}%`;
-                
-                // 更新时间显示
-                currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
-                totalTimeEl.textContent = formatTime(audioPlayer.duration);
-                
-                // 更新歌词
-                updateLyrics();
-            }
-        }
-        
-        // 设置音量
-        function setVolume(e) {
-            const width = volumeContainer.clientWidth;
-            const clickX = e.offsetX;
-            const volume = clickX / width;
-            
-            audioPlayer.volume = volume;
-            volumeBar.style.width = `${volume * 100}%`;
-            
-            // 更新静音图标
-            if (volume === 0) {
-                muteBtn.innerHTML = '<i class="fa fa-volume-off"></i>';
-            } else if (volume < 0.5) {
-                muteBtn.innerHTML = '<i class="fa fa-volume-down"></i>';
-            } else {
-                muteBtn.innerHTML = '<i class="fa fa-volume-up"></i>';
-            }
-        }
-        
-        // 切换静音
-        function toggleMute() {
-            if (audioPlayer.volume > 0) {
-                audioPlayer.volume = 0;
-                volumeBar.style.width = '0%';
-                muteBtn.innerHTML = '<i class="fa fa-volume-off"></i>';
-            } else {
-                audioPlayer.volume = 0.75; // 默认音量
-                volumeBar.style.width = '75%';
-                muteBtn.innerHTML = '<i class="fa fa-volume-up"></i>';
-            }
-        }
-        
-        // 切换播放/暂停
-        function togglePlayPause() {
-            if (audioPlayer.paused) {
-                audioPlayer.play().catch(error => {
-                    console.log('播放被阻止:', error);
-                    showToast('由于浏览器限制，需要先与页面交互', 'info');
-                });
-                playPauseBtn.innerHTML = '<i class="fa fa-pause text-2xl"></i>';
-                playPauseBigBtn.innerHTML = '<i class="fa fa-pause text-white text-5xl"></i>';
-                albumCover.classList.remove('paused');
-            } else {
-                audioPlayer.pause();
-                playPauseBtn.innerHTML = '<i class="fa fa-play text-2xl"></i>';
-                playPauseBigBtn.innerHTML = '<i class="fa fa-play text-white text-5xl"></i>';
-                albumCover.classList.add('paused');
-            }
-        }
-        
-        // 点击进度条跳转播放位置
-        function seekToPosition(e) {
-            const width = progressContainer.clientWidth;
-            const clickX = e.offsetX;
-            const seekTime = (clickX / width) * audioPlayer.duration;
-            
-            audioPlayer.currentTime = seekTime;
         }
         
         // 更新歌词显示
@@ -409,12 +313,10 @@
             const currentTime = audioPlayer.currentTime;
             let newIndex = currentLyricIndex;
             
-            // 查找当前时间对应的歌词
             while (newIndex < lyrics.length && lyrics[newIndex].time <= currentTime) {
                 newIndex++;
             }
             
-            // 如果找到新歌词
             if (newIndex > currentLyricIndex) {
                 currentLyricIndex = newIndex - 1;
                 
@@ -424,7 +326,6 @@
                     line.classList.remove('lyric-active');
                 });
                 
-                // 如果有当前歌词，高亮显示
                 if (currentLyricIndex >= 0 && currentLyricIndex < lyrics.length) {
                     const currentLine = lyricsEl.querySelector(`.lyric-line[data-index="${currentLyricIndex}"]`);
                     if (currentLine) {
@@ -436,16 +337,13 @@
                         const lineHeight = currentLine.offsetHeight;
                         
                         if (lineTop < lyricContainerTop) {
-                            // 向上滚动
                             lyricContainerTop = lineTop - (containerHeight - lineHeight) / 2;
                         } else if (lineTop + lineHeight > lyricContainerTop + containerHeight) {
-                            // 向下滚动
                             lyricContainerTop = lineTop - (containerHeight - lineHeight) / 2;
                         }
                         
-                        // 限制滚动范围
                         lyricContainerTop = Math.max(0, Math.min(lyricContainerTop, lyricsEl.offsetHeight - containerHeight));
-                        lyricContainer.style.transform = `translateY(-${lyricContainerTop}px)`;
+                        lyricContainer.scrollTop = lyricContainerTop; // 直接使用scrollTop实现滚动
                     }
                 }
             }
@@ -458,25 +356,20 @@
             currentSongIndex = index;
             const song = songs[index];
             
-            // 更新歌曲信息
             document.title = `我的音乐播放器 - ${song.title}`;
             document.getElementById('song-title').textContent = song.title;
             document.getElementById('song-artist').textContent = song.artist;
             albumCover.src = song.cover;
             audioPlayer.src = song.src;
             
-            // 解析歌词
             lyrics = parseLyrics(song.lyrics);
             renderLyrics();
             
-            // 重置播放器状态
             audioPlayer.pause();
             audioPlayer.currentTime = 0;
             playPauseBtn.innerHTML = '<i class="fa fa-play text-2xl"></i>';
             playPauseBigBtn.innerHTML = '<i class="fa fa-play text-white text-5xl"></i>';
             albumCover.classList.add('paused');
-            progressBar.style.width = '0%';
-            bufferBar.style.width = '0%';
             
             showToast(`正在播放: ${song.title} - ${song.artist}`, 'success');
         }
@@ -486,7 +379,6 @@
             lyricsEl.innerHTML = '';
             currentLyricIndex = 0;
             lyricContainerTop = 0;
-            lyricContainer.style.transform = 'translateY(0)';
             
             lyrics.forEach((lyric, index) => {
                 const line = document.createElement('p');
@@ -507,30 +399,77 @@
             loadSong(currentSongIndex - 1);
         }
         
+        // 切换播放/暂停
+        function togglePlayPause() {
+            if (audioPlayer.paused) {
+                audioPlayer.play().catch(error => {
+                    showToast('由于浏览器限制，需要先与页面交互', 'info');
+                });
+                playPauseBtn.innerHTML = '<i class="fa fa-pause text-2xl"></i>';
+                playPauseBigBtn.innerHTML = '<i class="fa fa-pause text-white text-5xl"></i>';
+                albumCover.classList.remove('paused');
+            } else {
+                audioPlayer.pause();
+                playPauseBtn.innerHTML = '<i class="fa fa-play text-2xl"></i>';
+                playPauseBigBtn.innerHTML = '<i class="fa fa-play text-white text-5xl"></i>';
+                albumCover.classList.add('paused');
+            }
+        }
+        
+        // 设置音量
+        function setVolume(e) {
+            const width = volumeContainer.clientWidth;
+            const clickX = e.offsetX;
+            const volume = clickX / width;
+            
+            audioPlayer.volume = volume;
+            volumeBar.style.width = `${volume * 100}%`;
+            
+            if (volume === 0) {
+                muteBtn.innerHTML = '<i class="fa fa-volume-off"></i>';
+            } else if (volume < 0.5) {
+                muteBtn.innerHTML = '<i class="fa fa-volume-down"></i>';
+            } else {
+                muteBtn.innerHTML = '<i class="fa fa-volume-up"></i>';
+            }
+        }
+        
+        // 切换静音
+        function toggleMute() {
+            if (audioPlayer.volume > 0) {
+                audioPlayer.volume = 0;
+                volumeBar.style.width = '0%';
+                muteBtn.innerHTML = '<i class="fa fa-volume-off"></i>';
+            } else {
+                audioPlayer.volume = 0.75;
+                volumeBar.style.width = '75%';
+                muteBtn.innerHTML = '<i class="fa fa-volume-up"></i>';
+            }
+        }
+        
         // 事件监听
         playPauseBtn.addEventListener('click', togglePlayPause);
         playPauseBigBtn.addEventListener('click', togglePlayPause);
         volumeContainer.addEventListener('click', setVolume);
         muteBtn.addEventListener('click', toggleMute);
-        progressContainer.addEventListener('click', seekToPosition);
         nextSongBtn.addEventListener('click', nextSong);
         prevSongBtn.addEventListener('click', prevSong);
         
-        // 进度更新监听
-        audioPlayer.addEventListener('timeupdate', updateProgress);
-        audioPlayer.addEventListener('loadedmetadata', updateProgress);
-        audioPlayer.addEventListener('loadeddata', updateProgress);
+        // 时间更新监听（仅用于歌词同步）
+        audioPlayer.addEventListener('timeupdate', updateLyrics);
+        audioPlayer.addEventListener('loadedmetadata', () => {
+            // 移除进度相关逻辑后，此处无需处理
+        });
         
         // 歌曲播放结束时切换下一首
         audioPlayer.addEventListener('ended', nextSong);
         
         // 初始化播放器
         loadSong(currentSongIndex);
-        audioPlayer.volume = 0.75; // 默认音量
+        audioPlayer.volume = 0.75;
         
         // 尝试自动播放
         audioPlayer.play().catch(error => {
-            console.log('自动播放被阻止:', error);
             showToast('由于浏览器限制，需要手动点击播放按钮', 'info');
         });
     </script>
