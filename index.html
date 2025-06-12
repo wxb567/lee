@@ -74,8 +74,34 @@
                 z-index: 5;
             }
             .lyric-active {
+                color: #0FC6C2;
+                font-weight: 600;
+            }
+            .lyric-sung {
                 color: #4080FF;
-                font-weight: 500;
+            }
+            .waveform-container {
+                height: 50px;
+                background-color: rgba(64, 128, 255, 0.1);
+                border-radius: 8px;
+                overflow: hidden;
+            }
+            .waveform {
+                height: 100%;
+                display: flex;
+                align-items: center;
+                padding: 0 4px;
+                transition: transform 0.2s ease;
+            }
+            .waveform-bar {
+                width: 2px;
+                margin: 0 1px;
+                background-color: rgba(64, 128, 255, 0.5);
+                border-radius: 2px;
+                transition: height 0.1s ease;
+            }
+            .waveform-bar.active {
+                background-color: #4080FF;
             }
         }
         
@@ -100,7 +126,7 @@
         /* 歌词容器样式 */
         .lyric-container {
             transition: transform 0.5s ease;
-            height: 120px;
+            height: 140px;
             overflow: hidden;
         }
     </style>
@@ -130,9 +156,14 @@
             <p id="song-artist" class="text-muted mb-4 text-center">周杰伦</p>
         </div>
         
-        <!-- 歌词显示区域 - 自动滚动 -->
+        <!-- 波形可视化 -->
+        <div class="waveform-container mx-4 mb-4">
+            <div id="waveform" class="waveform"></div>
+        </div>
+        
+        <!-- 歌词显示区域 - KTV效果 -->
         <div id="lyric-container" class="lyric-container p-2">
-            <div id="lyrics" class="text-center space-y-3 text-[clamp(0.9rem,3vw,1.1rem)]">
+            <div id="lyrics" class="text-center space-y-4 text-[clamp(1rem,3vw,1.2rem)]">
                 <p class="lyric-line">点击播放按钮开始播放音乐</p>
             </div>
         </div>
@@ -190,69 +221,62 @@
         const lyricContainer = document.getElementById('lyric-container');
         const prevSongBtn = document.getElementById('prev-song');
         const nextSongBtn = document.getElementById('next-song');
+        const waveformContainer = document.getElementById('waveform');
         
-        // 歌曲数据（包含歌词）
+        // 音频分析器
+        let audioContext;
+        let analyser;
+        let dataArray;
+        let bufferLength;
+        let source;
+        
+        // 歌词数据
         const songs = [
             {
                 title: "东风破",
                 artist: "周杰伦",
                 src: "https://s19.aconvert.com/convert/p3r68-cdx67/lqpg6-94src.mp3",
                 cover: "https://y.qq.com/music/photo_new/T002R300x300M000000MkMni19ClKG_5.jpg?max_age=2592000",
-                lyrics: "[00:00.00]周杰伦 - 东风破\n" +
-                        "[00:09.20]词：方文山 曲：周杰伦\n" +
-                        "[00:15.40]编曲：洪敬尧\n" +
-                        "[00:21.60]\n" +
-                        "[00:30.72]一盏离愁 孤单伫立在窗口\n" +
-                        "[00:37.02]我在门后 假装你人还没走\n" +
-                        "[00:43.32]旧地如重游 月圆更寂寞\n" +
-                        "[00:49.62]夜半清醒的烛火 不忍苛责我\n" +
-                        "[00:56.02]\n" +
-                        "[01:02.32]一壶漂泊 浪迹天涯难入喉\n" +
-                        "[01:08.62]你走之后 酒暖回忆思念瘦\n" +
-                        "[01:14.92]水向东流 时间怎么偷\n" +
-                        "[01:21.22]花开就一次成熟 我却错过\n" +
-                        "[01:27.52]\n" +
-                        "[01:28.22]谁在用琵琶弹奏 一曲东风破\n" +
-                        "[01:34.52]岁月在墙上剥落 看见小时候\n" +
-                        "[01:40.82]犹记得那年我们都还很年幼\n" +
-                        "[01:47.12]而如今琴声幽幽 我的等候你没听过\n" +
-                        "[01:53.42]\n" +
-                        "[01:54.12]谁在用琵琶弹奏 一曲东风破\n" +
-                        "[02:00.42]枫叶将故事染色 结局我看透\n" +
-                        "[02:06.72]篱笆外的古道我牵着你走过\n" +
-                        "[02:13.02]荒烟漫草的年头 就连分手都很沉默\n" +
-                        "[02:26.02]\n" +
-                        "[02:48.42]一壶漂泊 浪迹天涯难入喉\n" +
-                        "[02:54.72]你走之后 酒暖回忆思念瘦\n" +
-                        "[03:01.02]水向东流 时间怎么偷\n" +
-                        "[03:07.32]花开就一次成熟 我却错过\n" +
-                        "[03:13.62]\n" +
-                        "[03:14.32]谁在用琵琶弹奏 一曲东风破\n" +
-                        "[03:20.62]岁月在墙上剥落 看见小时候\n" +
-                        "[03:26.92]犹记得那年我们都还很年幼\n" +
-                        "[03:33.22]而如今琴声幽幽 我的等候你没听过\n" +
-                        "[03:39.52]\n" +
-                        "[03:40.22]谁在用琵琶弹奏 一曲东风破\n" +
-                        "[03:46.52]枫叶将故事染色 结局我看透\n" +
-                        "[03:52.82]篱笆外的古道我牵着你走过\n" +
-                        "[03:59.12]荒烟漫草的年头 就连分手都很沉默\n" +
-                        "[04:05.42]\n" +
-                        "[04:06.12]谁在用琵琶弹奏 一曲东风破\n" +
-                        "[04:12.42]岁月在墙上剥落 看见小时候\n" +
-                        "[04:18.72]犹记得那年我们都还很年幼\n" +
-                        "[04:25.02]而如今琴声幽幽 我的等候你没听过\n" +
-                        "[04:31.32]\n" +
-                        "[04:32.02]谁在用琵琶弹奏 一曲东风破\n" +
-                        "[04:38.32]枫叶将故事染色 结局我看透\n" +
-                        "[04:44.62]篱笆外的古道我牵着你走过\n" +
-                        "[04:50.92]荒烟漫草的年头 就连分手都很沉默"
+                lyrics: [
+                    { text: "一盏离愁 孤单伫立在窗口", intensity: [0.3, 0.5, 0.7, 0.6, 0.4, 0.5, 0.6, 0.8, 0.7, 0.5] },
+                    { text: "我在门后 假装你人还没走", intensity: [0.4, 0.6, 0.5, 0.7, 0.4, 0.5, 0.3, 0.4, 0.6, 0.5] },
+                    { text: "旧地如重游 月圆更寂寞", intensity: [0.5, 0.7, 0.6, 0.8, 0.7, 0.5, 0.4, 0.6, 0.5] },
+                    { text: "夜半清醒的烛火 不忍苛责我", intensity: [0.6, 0.8, 0.7, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4] },
+                    { text: "一壶漂泊 浪迹天涯难入喉", intensity: [0.4, 0.6, 0.8, 0.7, 0.6, 0.5, 0.7, 0.8, 0.6] },
+                    { text: "你走之后 酒暖回忆思念瘦", intensity: [0.5, 0.7, 0.6, 0.5, 0.4, 0.6, 0.8, 0.7, 0.5] },
+                    { text: "水向东流 时间怎么偷", intensity: [0.6, 0.8, 0.7, 0.6, 0.5, 0.7, 0.9, 0.8] },
+                    { text: "花开就一次成熟 我却错过", intensity: [0.7, 0.9, 0.8, 0.7, 0.6, 0.5, 0.7, 0.8, 0.6] },
+                    { text: "谁在用琵琶弹奏 一曲东风破", intensity: [0.8, 0.7, 0.6, 0.5, 0.7, 0.8, 0.9, 0.8, 0.7] },
+                    { text: "岁月在墙上剥落 看见小时候", intensity: [0.7, 0.6, 0.5, 0.7, 0.8, 0.9, 0.8, 0.7, 0.6] },
+                    { text: "犹记得那年我们都还很年幼", intensity: [0.6, 0.5, 0.7, 0.8, 0.9, 0.8, 0.7, 0.6, 0.5] },
+                    { text: "而如今琴声幽幽 我的等候你没听过", intensity: [0.5, 0.7, 0.8, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4] },
+                    { text: "谁在用琵琶弹奏 一曲东风破", intensity: [0.8, 0.7, 0.6, 0.5, 0.7, 0.8, 0.9, 0.8, 0.7] },
+                    { text: "枫叶将故事染色 结局我看透", intensity: [0.7, 0.6, 0.5, 0.7, 0.8, 0.9, 0.8, 0.7, 0.6] },
+                    { text: "篱笆外的古道我牵着你走过", intensity: [0.6, 0.5, 0.7, 0.8, 0.9, 0.8, 0.7, 0.6, 0.5] },
+                    { text: "荒烟漫草的年头 就连分手都很沉默", intensity: [0.5, 0.7, 0.8, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4] },
+                    { text: "一壶漂泊 浪迹天涯难入喉", intensity: [0.4, 0.6, 0.8, 0.7, 0.6, 0.5, 0.7, 0.8, 0.6] },
+                    { text: "你走之后 酒暖回忆思念瘦", intensity: [0.5, 0.7, 0.6, 0.5, 0.4, 0.6, 0.8, 0.7, 0.5] },
+                    { text: "水向东流 时间怎么偷", intensity: [0.6, 0.8, 0.7, 0.6, 0.5, 0.7, 0.9, 0.8] },
+                    { text: "花开就一次成熟 我却错过", intensity: [0.7, 0.9, 0.8, 0.7, 0.6, 0.5, 0.7, 0.8, 0.6] },
+                    { text: "谁在用琵琶弹奏 一曲东风破", intensity: [0.8, 0.7, 0.6, 0.5, 0.7, 0.8, 0.9, 0.8, 0.7] },
+                    { text: "岁月在墙上剥落 看见小时候", intensity: [0.7, 0.6, 0.5, 0.7, 0.8, 0.9, 0.8, 0.7, 0.6] },
+                    { text: "犹记得那年我们都还很年幼", intensity: [0.6, 0.5, 0.7, 0.8, 0.9, 0.8, 0.7, 0.6, 0.5] },
+                    { text: "而如今琴声幽幽 我的等候你没听过", intensity: [0.5, 0.7, 0.8, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4] },
+                    { text: "谁在用琵琶弹奏 一曲东风破", intensity: [0.8, 0.7, 0.6, 0.5, 0.7, 0.8, 0.9, 0.8, 0.7] },
+                    { text: "枫叶将故事染色 结局我看透", intensity: [0.7, 0.6, 0.5, 0.7, 0.8, 0.9, 0.8, 0.7, 0.6] },
+                    { text: "篱笆外的古道我牵着你走过", intensity: [0.6, 0.5, 0.7, 0.8, 0.9, 0.8, 0.7, 0.6, 0.5] },
+                    { text: "荒烟漫草的年头 就连分手都很沉默", intensity: [0.5, 0.7, 0.8, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4] }
+                ]
             },
         ];
         
         let currentSongIndex = 0;
-        let lyrics = [];
         let currentLyricIndex = 0;
         let lyricContainerTop = 0;
+        let waveformBars = [];
+        let lastPeakTime = 0;
+        let lyricProgress = 0;
+        let lastIntensity = 0;
         
         // 显示提示消息
         function showToast(message, type = 'info') {
@@ -278,83 +302,169 @@
             }, 3000);
         }
         
-        // 解析LRC歌词（优化：过滤时间戳为0的信息行）
-        function parseLyrics(lrcText) {
-            const lines = lrcText.split('\n');
-            const result = [];
-            
-            lines.forEach(line => {
-                const timeReg = /\[(\d{2}):(\d{2})(?:\.(\d{2,3}))?\](.*)/;
-                const match = line.match(timeReg);
+        // 初始化音频分析器
+        function initAudioAnalyser() {
+            try {
+                // 创建音频上下文
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 
-                if (match) {
-                    const minutes = parseInt(match[1]);
-                    const seconds = parseInt(match[2]);
-                    const milliseconds = match[3] ? parseInt(match[3]) : 0;
-                    const time = minutes * 60 + seconds + milliseconds / 100;
-                    const text = match[4].trim();
-                    
-                    // 过滤时间戳为0的信息行（如歌曲名、歌手信息）
-                    if (time > 0) {
-                        result.push({ time, text });
-                    }
-                }
-            });
-            
-            result.sort((a, b) => a.time - b.time);
-            return result;
+                // 创建分析器
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+                
+                // 创建波形可视化
+                createWaveform();
+                
+                // 连接音频源
+                connectAudioSource();
+                
+                // 开始音频分析循环
+                updateWaveform();
+                
+                return true;
+            } catch (error) {
+                console.error('音频分析器初始化失败:', error);
+                showToast('音频分析功能不可用', 'error');
+                return false;
+            }
         }
         
-        // 更新歌词显示与滚动（优化：增加最小时间间隔判断）
-        function updateLyrics() {
-            const currentTime = audioPlayer.currentTime;
-            const timeTolerance = 0.5; // 时间容差，避免频繁更新
+        // 连接音频源
+        function connectAudioSource() {
+            if (!audioContext || !analyser) return;
             
-            // 只有当时间变化超过容差时才更新，避免高频触发
-            if (Math.abs(currentTime - (updateLyrics.lastTime || 0)) < timeTolerance) {
-                return;
-            }
-            updateLyrics.lastTime = currentTime;
-            
-            let newIndex = currentLyricIndex;
-            
-            // 从当前索引开始查找，避免重复从头遍历
-            while (newIndex < lyrics.length && lyrics[newIndex].time <= currentTime) {
-                newIndex++;
+            // 断开之前的连接
+            if (source) {
+                source.disconnect();
             }
             
-            if (newIndex > currentLyricIndex) {
-                currentLyricIndex = newIndex - 1;
+            // 创建新的媒体源
+            source = audioContext.createMediaElementSource(audioPlayer);
+            source.connect(analyser);
+            analyser.connect(audioContext.destination);
+        }
+        
+        // 创建波形可视化
+        function createWaveform() {
+            waveformContainer.innerHTML = '';
+            waveformBars = [];
+            
+            // 创建波形条
+            for (let i = 0; i < 64; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'waveform-bar';
+                bar.style.height = '10%';
+                waveformContainer.appendChild(bar);
+                waveformBars.push(bar);
+            }
+        }
+        
+        // 更新波形可视化
+        function updateWaveform() {
+            if (!analyser || !audioPlayer.paused) {
+                // 获取音频数据
+                analyser.getByteFrequencyData(dataArray);
                 
-                // 清空所有歌词样式
-                const lyricLines = lyricsEl.querySelectorAll('.lyric-line');
-                lyricLines.forEach(line => {
-                    line.classList.remove('lyric-active');
-                });
+                // 计算平均强度
+                let sum = 0;
+                for (let i = 0; i < bufferLength; i++) {
+                    sum += dataArray[i];
+                }
+                const avgIntensity = sum / bufferLength / 255; // 归一化到0-1
                 
-                if (currentLyricIndex >= 0 && currentLyricIndex < lyrics.length) {
-                    const currentLine = lyricsEl.querySelector(`.lyric-line[data-index="${currentLyricIndex}"]`);
-                    if (currentLine) {
-                        currentLine.classList.add('lyric-active');
-                        
-                        // 计算歌词滚动位置（自动居中）
-                        const lineTop = currentLine.offsetTop;
-                        const containerHeight = lyricContainer.offsetHeight;
-                        const lineHeight = currentLine.offsetHeight;
-                        
-                        // 确保当前歌词显示在容器中心，增加边界检查
-                        let targetTop = lineTop - (containerHeight - lineHeight) / 2;
-                        
-                        // 防止滚动超出范围
-                        const maxTop = lyricsEl.offsetHeight - containerHeight;
-                        targetTop = Math.max(0, Math.min(targetTop, maxTop));
-                        
-                        lyricContainer.scrollTop = targetTop;
+                // 更新波形条高度
+                for (let i = 0; i < waveformBars.length; i++) {
+                    const bar = waveformBars[i];
+                    const height = (dataArray[i * 4] / 255) * 100; // 映射到0-100%
+                    bar.style.height = `${height}%`;
+                    
+                    // 高亮当前位置
+                    if (i === Math.floor((audioPlayer.currentTime / audioPlayer.duration) * waveformBars.length)) {
+                        bar.classList.add('active');
+                    } else {
+                        bar.classList.remove('active');
                     }
+                }
+                
+                // 检测音频峰值
+                detectLyricChange(avgIntensity);
+            }
+            
+            // 继续更新
+            requestAnimationFrame(updateWaveform);
+        }
+        
+        // 检测歌词变化（基于音频强度）
+        function detectLyricChange(currentIntensity) {
+            const lyrics = songs[currentSongIndex].lyrics;
+            if (!lyrics || lyrics.length === 0) return;
+            
+            // 计算强度变化率
+            const intensityChange = Math.abs(currentIntensity - lastIntensity);
+            lastIntensity = currentIntensity;
+            
+            // 检测峰值（强度突然增加）
+            const isPeak = currentIntensity > 0.3 && intensityChange > 0.1;
+            const now = Date.now();
+            
+            // 避免频繁触发（设置最小间隔）
+            if (isPeak && now - lastPeakTime > 1000) {
+                lastPeakTime = now;
+                
+                // 增加歌词进度
+                lyricProgress += 1;
+                
+                // 如果进度超过当前歌词的长度，切换到下一句
+                if (lyricProgress >= lyrics[currentLyricIndex].intensity.length) {
+                    lyricProgress = 0;
+                    currentLyricIndex = (currentLyricIndex + 1) % lyrics.length;
+                    
+                    // 更新歌词显示
+                    updateLyricDisplay();
                 }
             }
         }
-        updateLyrics.lastTime = 0; // 初始化时间戳
+        
+        // 更新歌词显示
+        function updateLyricDisplay() {
+            const lyrics = songs[currentSongIndex].lyrics;
+            if (!lyrics || lyrics.length === 0) return;
+            
+            // 获取所有歌词行
+            const lyricLines = lyricsEl.querySelectorAll('.lyric-line');
+            
+            // 遍历所有歌词行，设置状态
+            lyricLines.forEach((line, index) => {
+                // 移除所有样式
+                line.classList.remove('lyric-active', 'lyric-sung');
+                
+                if (index < currentLyricIndex) {
+                    // 已唱歌词 - 蓝色
+                    line.classList.add('lyric-sung');
+                } else if (index === currentLyricIndex) {
+                    // 当前歌词 - 高亮色
+                    line.classList.add('lyric-active');
+                }
+                // 未唱歌词不添加样式，保持默认颜色
+            });
+            
+            // 滚动到当前歌词
+            const currentLine = lyricsEl.querySelector(`.lyric-line[data-index="${currentLyricIndex}"]`);
+            if (currentLine) {
+                // 计算滚动位置，确保当前歌词居中
+                const lineTop = currentLine.offsetTop;
+                const containerHeight = lyricContainer.offsetHeight;
+                const lineHeight = currentLine.offsetHeight;
+                
+                let targetTop = lineTop - (containerHeight - lineHeight) / 2;
+                const maxTop = lyricsEl.offsetHeight - containerHeight;
+                targetTop = Math.max(0, Math.min(targetTop, maxTop));
+                
+                lyricContainer.scrollTop = targetTop;
+            }
+        }
         
         // 加载歌曲
         function loadSong(index) {
@@ -369,7 +479,6 @@
             albumCover.src = song.cover;
             audioPlayer.src = song.src;
             
-            lyrics = parseLyrics(song.lyrics);
             renderLyrics();
             
             audioPlayer.pause();
@@ -377,6 +486,17 @@
             playPauseBtn.innerHTML = '<i class="fa fa-play text-2xl"></i>';
             playPauseBigBtn.innerHTML = '<i class="fa fa-play text-primary text-5xl"></i>';
             albumCover.classList.add('paused');
+            
+            // 重置歌词状态
+            currentLyricIndex = 0;
+            lyricProgress = 0;
+            lastIntensity = 0;
+            lastPeakTime = 0;
+            
+            // 重新连接音频源
+            if (audioContext) {
+                connectAudioSource();
+            }
             
             showToast(`正在播放: ${song.title} - ${song.artist}`, 'success');
         }
@@ -386,22 +506,28 @@
             lyricsEl.innerHTML = '';
             currentLyricIndex = 0;
             
-            // 初始化时显示"准备播放"提示
-            if (lyrics.length === 0) {
+            const song = songs[currentSongIndex];
+            if (!song || !song.lyrics || song.lyrics.length === 0) {
                 const line = document.createElement('p');
                 line.className = 'lyric-line';
-                line.textContent = '准备播放音乐...';
+                line.textContent = '歌词加载中...';
                 lyricsEl.appendChild(line);
                 return;
             }
             
-            lyrics.forEach((lyric, index) => {
+            song.lyrics.forEach((lyric, index) => {
                 const line = document.createElement('p');
                 line.className = 'lyric-line';
                 line.dataset.index = index;
                 line.textContent = lyric.text;
                 lyricsEl.appendChild(line);
             });
+            
+            // 设置第一行为活动状态
+            const firstLine = lyricsEl.querySelector('.lyric-line');
+            if (firstLine) {
+                firstLine.classList.add('lyric-active');
+            }
         }
         
         // 下一首歌曲
@@ -417,6 +543,13 @@
         // 切换播放/暂停
         function togglePlayPause() {
             if (audioPlayer.paused) {
+                // 初始化音频分析器（如果尚未初始化）
+                if (!audioContext) {
+                    if (!initAudioAnalyser()) {
+                        showToast('音频分析功能不可用，将使用时间戳模式', 'info');
+                    }
+                }
+                
                 audioPlayer.play().catch(error => {
                     showToast('由于浏览器限制，需要先与页面交互', 'info');
                 });
@@ -472,14 +605,6 @@
         muteBtn.addEventListener('click', toggleMute);
         nextSongBtn.addEventListener('click', nextSong);
         prevSongBtn.addEventListener('click', prevSong);
-        
-        // 时间更新监听（歌词自动滚动）
-        audioPlayer.addEventListener('timeupdate', updateLyrics);
-        audioPlayer.addEventListener('loadedmetadata', () => {
-            // 加载完成后重置歌词位置
-            lyricContainer.scrollTop = 0;
-            updateLyrics.lastTime = 0; // 重置时间戳
-        });
         
         // 歌曲播放结束时切换下一首
         audioPlayer.addEventListener('ended', nextSong);
