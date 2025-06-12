@@ -2,61 +2,178 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>网易云音乐播放器</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>网易云音乐播放器 - 响应式设计</title>
     <style>
         /* 基础样式 */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
             margin: 0;
             padding: 0;
+            background-color: #f8f9fa;
+            background-image: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            background-color: #f5f5f5;
-            background-image: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
-        }
-        
-        /* 播放器容器 */
-        .player-container {
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
             padding: 20px;
-            max-width: 100%;
             box-sizing: border-box;
         }
         
-        /* 标题样式 */
-        .title {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #333;
-            font-size: 24px;
-            font-weight: 600;
+        /* 播放器容器 - 响应式设计 */
+        .player-container {
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            overflow: hidden;
+            max-width: 100%;
+            width: 350px;
+            box-sizing: border-box;
+            position: relative;
+            transition: all 0.3s ease;
         }
         
-        /* 响应式设计 */
+        /* 标题样式 - 触控友好 */
+        .title {
+            text-align: center;
+            margin: 0;
+            padding: 16px 0;
+            color: #333;
+            font-size: 18px;
+            font-weight: 600;
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #eee;
+        }
+        
+        /* 网易云音乐播放器 */
+        .music-player {
+            width: 100%;
+            height: 86px;
+            border: none;
+            margin: 0;
+            display: block;
+        }
+        
+        /* 移动端优化 */
         @media (max-width: 400px) {
             .player-container {
-                padding: 10px;
-                width: 90%;
+                width: 100%;
+                border-radius: 0;
+                box-shadow: none;
             }
             
             .title {
-                font-size: 20px;
+                font-size: 16px;
+                padding: 12px 0;
             }
+        }
+        
+        /* 播放控制按钮 - 移动端友好 */
+        .control-buttons {
+            display: flex;
+            justify-content: center;
+            margin: 16px 0;
+            gap: 20px;
+        }
+        
+        .control-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: #165DFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(22, 93, 255, 0.3);
+            transition: all 0.2s ease;
+        }
+        
+        .control-button:hover {
+            background-color: #0e47d2;
+            transform: translateY(-2px);
+        }
+        
+        .control-button i {
+            font-size: 20px;
         }
     </style>
 </head>
 <body>
     <div class="player-container">
-        <h1 class="title">正在播放音乐</h1>
-        <!-- 网易云音乐播放器 -->
-        <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86" 
-                src="//music.163.com/outchain/player?type=2&id=2647582218&auto=0&height=66"></iframe>
+        <h1 class="title">网易云音乐</h1>
+        <!-- 网易云音乐播放器 - 包含mute参数以支持自动播放 -->
+        <iframe class="music-player" frameborder="no" border="0" marginwidth="0" marginheight="0" 
+                src="//music.163.com/outchain/player?type=2&id=2647582218&auto=1&height=66&mute=1"></iframe>
+        
+        <!-- 移动端播放控制按钮 -->
+        <div class="control-buttons">
+            <button class="control-button" id="prev-song">
+                <i class="fa fa-step-backward"></i>
+            </button>
+            <button class="control-button" id="play-pause">
+                <i class="fa fa-pause"></i>
+            </button>
+            <button class="control-button" id="next-song">
+                <i class="fa fa-step-forward"></i>
+            </button>
+        </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/js/font-awesome.min.js"></script>
+    <script>
+        // 获取DOM元素
+        const musicPlayer = document.querySelector('.music-player');
+        const playPauseBtn = document.getElementById('play-pause');
+        const prevSongBtn = document.getElementById('prev-song');
+        const nextSongBtn = document.getElementById('next-song');
+        
+        // 歌曲ID列表 - 可替换为你喜欢的歌曲
+        const songIds = ['2647582218', '186016', '28840350', '1390734646'];
+        let currentSongIndex = 0;
+        
+        // 更新歌曲
+        function updateSong(id) {
+            musicPlayer.src = `//music.163.com/outchain/player?type=2&id=${id}&auto=1&height=66&mute=1`;
+            // 重新加载iframe以更新歌曲
+            const oldSrc = musicPlayer.src;
+            musicPlayer.src = '';
+            musicPlayer.src = oldSrc;
+        }
+        
+        // 播放/暂停按钮事件
+        playPauseBtn.addEventListener('click', function() {
+            // 由于iframe跨域限制，无法直接控制播放状态
+            // 这里通过重新加载src来模拟播放/暂停
+            if (this.innerHTML.includes('fa-pause')) {
+                this.innerHTML = '<i class="fa fa-play"></i>';
+                // 暂停播放 - 实际上是静音
+                musicPlayer.src = musicPlayer.src.replace('mute=1', 'mute=1&pause=1');
+            } else {
+                this.innerHTML = '<i class="fa fa-pause"></i>';
+                // 播放音乐
+                musicPlayer.src = musicPlayer.src.replace('&pause=1', '');
+            }
+        });
+        
+        // 上一首按钮事件
+        prevSongBtn.addEventListener('click', function() {
+            currentSongIndex = (currentSongIndex - 1 + songIds.length) % songIds.length;
+            updateSong(songIds[currentSongIndex]);
+            playPauseBtn.innerHTML = '<i class="fa fa-pause"></i>';
+        });
+        
+        // 下一首按钮事件
+        nextSongBtn.addEventListener('click', function() {
+            currentSongIndex = (currentSongIndex + 1) % songIds.length;
+            updateSong(songIds[currentSongIndex]);
+            playPauseBtn.innerHTML = '<i class="fa fa-pause"></i>';
+        });
+        
+        // 初始化
+        updateSong(songIds[currentSongIndex]);
+    </script>
 </body>
 </html>
