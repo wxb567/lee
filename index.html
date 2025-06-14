@@ -11,10 +11,11 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#165DFF',
-                        secondary: '#FF7D00',
-                        dark: '#1E293B',
-                        light: '#F8FAFC'
+                        primary: '#4F46E5', // 靛蓝色调
+                        secondary: '#EC4899', // 粉色调
+                        accent: '#8B5CF6', // 紫色调
+                        neutral: '#F3F4F6', // 浅灰色
+                        dark: '#1F2937', // 深灰色
                     },
                     fontFamily: {
                         inter: ['Inter', 'system-ui', 'sans-serif'],
@@ -40,6 +41,22 @@
             .needle-back {
                 animation: needle-back 0.5s ease-out forwards;
             }
+            .record-grooves {
+                background-image: 
+                    radial-gradient(circle, #000 0%, #000 10%, transparent 10%),
+                    radial-gradient(circle, #000 0%, #000 8%, transparent 8%),
+                    radial-gradient(circle, #000 0%, #000 6%, transparent 6%);
+                background-size: 100% 100%, 80% 80%, 60% 60%;
+                background-position: center center;
+                background-repeat: no-repeat;
+            }
+            .glow {
+                box-shadow: 0 0 15px rgba(79, 70, 229, 0.5);
+            }
+            .play-mode-active {
+                color: theme('colors.secondary');
+                transform: scale(1.1);
+            }
         }
 
         @keyframes rotate-center {
@@ -58,54 +75,59 @@
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-dark to-slate-800 min-h-screen font-inter text-light">
+<body class="bg-gradient-to-br from-neutral to-slate-100 min-h-screen font-inter text-dark">
     <div class="container mx-auto px-4 py-8 max-w-6xl">
         <!-- 顶部标题 -->
         <header class="text-center mb-10">
             <h1 class="text-[clamp(2rem,5vw,3.5rem)] font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary mb-2 text-shadow">唱片点播机</h1>
-            <p class="text-slate-400 text-lg">感受黑胶唱片带来的纯粹音乐体验</p>
+            <p class="text-slate-500 text-lg">感受黑胶唱片带来的纯粹音乐体验</p>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- 唱片播放区域 - 占左侧1/3宽度 -->
-            <div class="lg:col-span-1 relative flex flex-col items-center justify-center bg-slate-900/50 rounded-2xl p-8 backdrop-blur-sm border border-slate-700/50 shadow-2xl">
+            <div class="lg:col-span-1 relative flex flex-col items-center justify-center bg-white/80 rounded-2xl p-8 backdrop-blur-sm border border-slate-200 shadow-lg">
                 <!-- 唱片机底座 -->
                 <div class="w-full max-w-md h-auto relative">
                     <!-- 唱片 -->
                     <div class="relative mx-auto w-64 h-64 md:w-80 md:h-80">
                         <!-- 唱片外圈装饰 -->
-                        <div class="absolute inset-0 rounded-full border-8 border-slate-700 shadow-inner"></div>
+                        <div class="absolute inset-0 rounded-full border-8 border-slate-200 shadow-inner"></div>
                         
                         <!-- 唱针 -->
-                        <div id="needle" class="absolute top-0 right-0 w-24 h-32 transform origin-[20%_20%] z-20">
+                        <div id="needle" class="absolute top-0 right-0 w-24 h-32 transform origin-[20%_20%] z-20 transition-transform duration-300">
                             <div class="w-full h-full relative">
-                                <div class="absolute top-0 left-0 w-full h-full bg-slate-400 rounded-full opacity-30"></div>
-                                <div class="absolute top-2 left-2 w-20 h-20 bg-slate-600 rounded-full opacity-30"></div>
-                                <div class="absolute top-4 left-4 w-16 h-16 bg-slate-800 rounded-full opacity-30"></div>
-                                <div class="absolute top-6 left-6 w-12 h-12 bg-slate-900 rounded-full opacity-30"></div>
-                                <div class="absolute top-8 left-8 w-8 h-8 bg-slate-700 rounded-full"></div>
-                                <div class="absolute top-8 left-10 w-12 h-2 bg-slate-400 rounded-sm transform rotate-45"></div>
-                                <div class="absolute top-14 left-20 w-4 h-1 bg-slate-300 rounded-sm transform rotate-45"></div>
+                                <!-- 唱针底座 -->
+                                <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-slate-300 to-slate-500 rounded-full opacity-80 shadow-lg"></div>
+                                <div class="absolute top-2 left-2 w-20 h-20 bg-gradient-to-tr from-slate-200 to-slate-400 rounded-full opacity-70"></div>
+                                <div class="absolute top-4 left-4 w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-300 rounded-full opacity-60"></div>
+                                <div class="absolute top-6 left-6 w-12 h-12 bg-gradient-to-tr from-slate-50 to-slate-200 rounded-full opacity-50"></div>
+                                <div class="absolute top-8 left-8 w-8 h-8 bg-gradient-to-br from-white to-slate-100 rounded-full shadow-inner"></div>
+                                
+                                <!-- 唱针臂 -->
+                                <div class="absolute top-8 left-10 w-12 h-2 bg-gradient-to-r from-slate-400 to-slate-600 rounded-sm transform rotate-45 shadow-md"></div>
+                                
+                                <!-- 唱针头 -->
+                                <div class="absolute top-14 left-20 w-4 h-1 bg-gradient-to-r from-slate-300 to-slate-500 rounded-sm transform rotate-45 shadow-md"></div>
                             </div>
                         </div>
                         
                         <!-- 唱片 -->
-                        <div id="record" class="absolute inset-4 rounded-full bg-black overflow-hidden shadow-lg rotate-center paused">
+                        <div id="record" class="absolute inset-4 rounded-full bg-black overflow-hidden shadow-xl rotate-center paused record-grooves">
                             <!-- 唱片外圈 -->
-                            <div class="absolute inset-0 rounded-full border-2 border-slate-700"></div>
+                            <div class="absolute inset-0 rounded-full border-2 border-slate-700/30"></div>
                             <!-- 唱片纹路 -->
-                            <div class="absolute inset-4 rounded-full bg-black border-8 border-slate-800"></div>
-                            <div class="absolute inset-8 rounded-full bg-black border-4 border-slate-700"></div>
-                            <div class="absolute inset-12 rounded-full bg-black border-2 border-slate-600"></div>
-                            <div class="absolute inset-16 rounded-full bg-black border border-slate-500"></div>
-                            <div class="absolute inset-20 rounded-full bg-black border border-slate-400"></div>
-                            <div class="absolute inset-24 rounded-full bg-black border border-slate-300"></div>
+                            <div class="absolute inset-4 rounded-full bg-black border-8 border-slate-800/20"></div>
+                            <div class="absolute inset-8 rounded-full bg-black border-4 border-slate-700/20"></div>
+                            <div class="absolute inset-12 rounded-full bg-black border-2 border-slate-600/20"></div>
+                            <div class="absolute inset-16 rounded-full bg-black border border-slate-500/20"></div>
+                            <div class="absolute inset-20 rounded-full bg-black border border-slate-400/20"></div>
+                            <div class="absolute inset-24 rounded-full bg-black border border-slate-300/20"></div>
                             <!-- 唱片中心 -->
-                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-slate-400 flex items-center justify-center">
-                                <div class="w-6 h-6 rounded-full bg-black"></div>
+                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-gradient-to-br from-slate-200 to-slate-400 flex items-center justify-center shadow-inner">
+                                <div class="w-6 h-6 rounded-full bg-black border border-slate-300/50"></div>
                             </div>
                             <!-- 唱片封面 -->
-                            <div id="album-cover" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-slate-800">
+                            <div id="album-cover" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-slate-800/20 shadow-lg">
                                 <img id="album-img" src="https://picsum.photos/seed/music1/300/300" alt="唱片封面" class="w-full h-full object-cover">
                             </div>
                         </div>
@@ -115,17 +137,17 @@
                 <!-- 歌曲信息 -->
                 <div class="mt-8 text-center">
                     <h2 id="song-title" class="text-2xl font-bold mb-1">歌曲名称</h2>
-                    <p id="song-artist" class="text-slate-400">歌手</p>
+                    <p id="song-artist" class="text-slate-500">歌手</p>
                 </div>
 
                 <!-- 播放控制 -->
                 <div class="mt-6 flex flex-col items-center w-full max-w-md">
                     <!-- 进度条 -->
                     <div class="w-full mb-4 relative">
-                        <div class="h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                            <div id="progress-bar" class="h-full bg-primary w-0 rounded-full transition-all duration-150"></div>
+                        <div class="h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                            <div id="progress-bar" class="h-full bg-gradient-to-r from-primary to-accent w-0 rounded-full transition-all duration-150"></div>
                         </div>
-                        <div class="flex justify-between text-xs text-slate-400 mt-1">
+                        <div class="flex justify-between text-xs text-slate-500 mt-1">
                             <span id="current-time">0:00</span>
                             <span id="total-time">0:00</span>
                         </div>
@@ -133,38 +155,38 @@
 
                     <!-- 控制按钮 -->
                     <div class="flex items-center justify-center gap-6">
-                        <button id="shuffle-btn" class="text-slate-400 hover:text-secondary transition-colors">
+                        <button id="shuffle-btn" class="text-slate-400 hover:text-secondary transition-all duration-300 hover:scale-110">
                             <i class="fa fa-random text-xl"></i>
                         </button>
-                        <button id="prev-btn" class="text-slate-300 hover:text-white transition-colors">
+                        <button id="prev-btn" class="text-slate-500 hover:text-primary transition-all duration-300 hover:scale-110">
                             <i class="fa fa-step-backward text-2xl"></i>
                         </button>
-                        <button id="play-btn" class="w-14 h-14 bg-primary hover:bg-primary/90 rounded-full flex items-center justify-center shadow-lg transform hover:scale-105 transition-all">
+                        <button id="play-btn" class="w-14 h-14 bg-gradient-to-br from-primary to-accent hover:from-primary/90 hover:to-accent/90 rounded-full flex items-center justify-center shadow-lg transform hover:scale-105 transition-all duration-300 glow">
                             <i class="fa fa-play text-white text-xl ml-1"></i>
                         </button>
-                        <button id="next-btn" class="text-slate-300 hover:text-white transition-colors">
+                        <button id="next-btn" class="text-slate-500 hover:text-primary transition-all duration-300 hover:scale-110">
                             <i class="fa fa-step-forward text-2xl"></i>
                         </button>
-                        <button id="repeat-btn" class="text-slate-400 hover:text-secondary transition-colors relative">
+                        <button id="repeat-btn" class="text-slate-400 hover:text-secondary transition-all duration-300 hover:scale-110 relative">
                             <i class="fa fa-repeat text-xl"></i>
                         </button>
                     </div>
 
                     <!-- 音量控制 -->
                     <div class="mt-6 flex items-center gap-3 w-full max-w-xs">
-                        <i class="fa fa-volume-up text-slate-300"></i>
+                        <i class="fa fa-volume-up text-slate-500"></i>
                         <input id="volume-slider" type="range" min="0" max="1" step="0.05" value="0.7" 
-                               class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                               class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
                     </div>
                 </div>
             </div>
 
             <!-- 歌词和歌曲列表 - 占右侧2/3宽度 -->
-            <div class="lg:col-span-2 bg-slate-900/50 rounded-2xl p-8 backdrop-blur-sm border border-slate-700/50 shadow-2xl flex flex-col">
+            <div class="lg:col-span-2 bg-white/80 rounded-2xl p-8 backdrop-blur-sm border border-slate-200 shadow-lg flex flex-col">
                 <!-- 标签页导航 -->
-                <div class="flex border-b border-slate-700 mb-6">
-                    <button id="lyrics-tab" class="px-6 py-3 font-medium text-white border-b-2 border-primary">歌词</button>
-                    <button id="playlist-tab" class="px-6 py-3 font-medium text-slate-400 hover:text-white transition-colors">歌曲列表</button>
+                <div class="flex border-b border-slate-200 mb-6">
+                    <button id="lyrics-tab" class="px-6 py-3 font-medium text-primary border-b-2 border-primary">歌词</button>
+                    <button id="playlist-tab" class="px-6 py-3 font-medium text-slate-400 hover:text-primary transition-colors">歌曲列表</button>
                 </div>
 
                 <!-- 歌词显示区域 -->
@@ -224,12 +246,12 @@
         let lyrics = [];
         // 播放状态
         let isPlaying = false;
-        // 重复模式：0-不重复，1-单曲循环，2-列表循环
+        // 重复模式：0-不重复，1-单曲循环，2-列表循环，3-随机播放
         let repeatMode = 2;
-        // 随机播放状态
-        let isShuffle = false;
         // 上一次随机播放的索引
         let lastShuffleIndex = -1;
+        // 已播放的随机歌曲历史
+        let shuffleHistory = [];
 
         // DOM 元素
         const record = document.getElementById('record');
@@ -263,6 +285,9 @@
             
             // 注册事件监听器
             registerEventListeners();
+            
+            // 更新播放模式UI
+            updatePlayModeUI();
         }
 
         // 加载歌曲
@@ -285,6 +310,15 @@
             
             // 更新歌曲列表中的当前选中项
             updateActiveSongInPlaylist();
+            
+            // 如果是随机模式，记录当前歌曲到历史
+            if (repeatMode === 3) {
+                shuffleHistory.push(currentSongIndex);
+                // 限制历史记录长度
+                if (shuffleHistory.length > songs.length * 2) {
+                    shuffleHistory.shift();
+                }
+            }
         }
 
         // 加载歌词
@@ -349,9 +383,9 @@
                 lineEl.textContent = line.text;
                 
                 if (index === currentLineIndex) {
-                    lineEl.className = 'text-primary font-medium';
+                    lineEl.className = 'text-primary font-medium scale-105 transition-transform duration-300';
                 } else {
-                    lineEl.className = 'text-slate-400 hover:text-white transition-colors';
+                    lineEl.className = 'text-slate-500 hover:text-primary transition-colors';
                 }
                 
                 lyricsEl.appendChild(lineEl);
@@ -372,7 +406,7 @@
             
             songs.forEach((song, index) => {
                 const songItem = document.createElement('li');
-                songItem.className = `flex items-center p-3 rounded-lg hover:bg-slate-800/50 transition-colors cursor-pointer ${index === currentSongIndex ? 'bg-slate-800/70 border-l-4 border-primary' : ''}`;
+                songItem.className = `flex items-center p-3 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer ${index === currentSongIndex ? 'bg-slate-100 border-l-4 border-primary' : ''}`;
                 
                 songItem.innerHTML = `
                     <div class="w-10 h-10 rounded-full overflow-hidden mr-4">
@@ -380,7 +414,7 @@
                     </div>
                     <div class="flex-1">
                         <h3 class="font-medium">${song.title}</h3>
-                        <p class="text-sm text-slate-400">${song.artist}</p>
+                        <p class="text-sm text-slate-500">${song.artist}</p>
                     </div>
                     <div class="text-slate-400">
                         ${index === currentSongIndex ? '<i class="fa fa-play-circle text-primary"></i>' : ''}
@@ -405,10 +439,10 @@
             
             songItems.forEach((item, index) => {
                 if (index === currentSongIndex) {
-                    item.classList.add('bg-slate-800/70', 'border-l-4', 'border-primary');
+                    item.classList.add('bg-slate-100', 'border-l-4', 'border-primary');
                     item.querySelector('div:last-child').innerHTML = '<i class="fa fa-play-circle text-primary"></i>';
                 } else {
-                    item.classList.remove('bg-slate-800/70', 'border-l-4', 'border-primary');
+                    item.classList.remove('bg-slate-100', 'border-l-4', 'border-primary');
                     item.querySelector('div:last-child').innerHTML = '';
                 }
             });
@@ -481,70 +515,77 @@
             audio.volume = this.value;
         }
 
-        // 下一首歌曲
-        function nextSong() {
-            if (isShuffle) {
-                // 随机播放模式
+        // 获取下一首歌曲索引
+        function getNextSongIndex() {
+            if (repeatMode === 3) { // 随机播放
                 let randomIndex;
+                // 避免连续播放同一首歌
                 do {
                     randomIndex = Math.floor(Math.random() * songs.length);
                 } while (randomIndex === currentSongIndex && songs.length > 1);
                 
                 lastShuffleIndex = currentSongIndex;
-                currentSongIndex = randomIndex;
-            } else {
-                // 顺序播放模式
-                currentSongIndex = (currentSongIndex + 1) % songs.length;
+                return randomIndex;
+            } else { // 顺序播放或列表循环
+                return (currentSongIndex + 1) % songs.length;
             }
-            
+        }
+
+        // 获取上一首歌曲索引
+        function getPrevSongIndex() {
+            if (repeatMode === 3 && shuffleHistory.length > 1) { // 随机播放且有历史记录
+                // 返回历史记录中的上一首
+                shuffleHistory.pop(); // 移除当前歌曲
+                lastShuffleIndex = shuffleHistory.length > 0 ? shuffleHistory.pop() : currentSongIndex;
+                return lastShuffleIndex;
+            } else { // 顺序播放
+                return (currentSongIndex - 1 + songs.length) % songs.length;
+            }
+        }
+
+        // 下一首歌曲
+        function nextSong() {
+            currentSongIndex = getNextSongIndex();
             loadSong(songs[currentSongIndex]);
             playSong();
         }
 
         // 上一首歌曲
         function prevSong() {
-            if (isShuffle && lastShuffleIndex !== -1) {
-                // 如果是随机播放，且有上一次的随机索引，则回到上一次的歌曲
-                currentSongIndex = lastShuffleIndex;
-                lastShuffleIndex = -1;
-            } else {
-                // 顺序播放模式
-                currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
-            }
-            
+            currentSongIndex = getPrevSongIndex();
             loadSong(songs[currentSongIndex]);
             playSong();
         }
 
         // 切换重复模式
         function toggleRepeatMode() {
-            repeatMode = (repeatMode + 1) % 3;
+            repeatMode = (repeatMode + 1) % 4; // 0-不重复，1-单曲循环，2-列表循环，3-随机播放
+            updatePlayModeUI();
+        }
+
+        // 更新播放模式UI
+        function updatePlayModeUI() {
+            // 重置所有按钮样式
+            repeatBtn.classList.remove('play-mode-active');
+            shuffleBtn.classList.remove('play-mode-active');
             
+            // 设置当前模式样式
             switch (repeatMode) {
                 case 0: // 不重复
                     repeatBtn.innerHTML = '<i class="fa fa-repeat text-xl"></i>';
-                    repeatBtn.classList.remove('text-secondary');
                     break;
                 case 1: // 单曲循环
                     repeatBtn.innerHTML = '<i class="fa fa-repeat text-xl"></i><span class="absolute text-[8px] top-0 right-0">1</span>';
-                    repeatBtn.classList.add('text-secondary');
+                    repeatBtn.classList.add('play-mode-active');
                     break;
                 case 2: // 列表循环
                     repeatBtn.innerHTML = '<i class="fa fa-repeat text-xl"></i>';
-                    repeatBtn.classList.add('text-secondary');
+                    repeatBtn.classList.add('play-mode-active');
                     break;
-            }
-        }
-
-        // 切换随机播放
-        function toggleShuffle() {
-            isShuffle = !isShuffle;
-            
-            if (isShuffle) {
-                shuffleBtn.classList.add('text-secondary');
-            } else {
-                shuffleBtn.classList.remove('text-secondary');
-                lastShuffleIndex = -1;
+                case 3: // 随机播放
+                    shuffleBtn.innerHTML = '<i class="fa fa-random text-xl"></i>';
+                    shuffleBtn.classList.add('play-mode-active');
+                    break;
             }
         }
 
@@ -586,9 +627,9 @@
             
             // 标签页切换
             lyricsTab.addEventListener('click', () => {
-                lyricsTab.classList.add('text-white', 'border-b-2', 'border-primary');
+                lyricsTab.classList.add('text-primary', 'border-b-2', 'border-primary');
                 lyricsTab.classList.remove('text-slate-400');
-                playlistTab.classList.remove('text-white', 'border-b-2', 'border-primary');
+                playlistTab.classList.remove('text-primary', 'border-b-2', 'border-primary');
                 playlistTab.classList.add('text-slate-400');
                 
                 lyricsContainer.classList.remove('hidden');
@@ -596,9 +637,9 @@
             });
             
             playlistTab.addEventListener('click', () => {
-                playlistTab.classList.add('text-white', 'border-b-2', 'border-primary');
+                playlistTab.classList.add('text-primary', 'border-b-2', 'border-primary');
                 playlistTab.classList.remove('text-slate-400');
-                lyricsTab.classList.remove('text-white', 'border-b-2', 'border-primary');
+                lyricsTab.classList.remove('text-primary', 'border-b-2', 'border-primary');
                 lyricsTab.classList.add('text-slate-400');
                 
                 playlistContainer.classList.remove('hidden');
@@ -607,9 +648,7 @@
             
             // 重复模式切换
             repeatBtn.addEventListener('click', toggleRepeatMode);
-            
-            // 随机播放切换
-            shuffleBtn.addEventListener('click', toggleShuffle);
+            shuffleBtn.addEventListener('click', toggleRepeatMode);
         }
 
         // 初始化应用
