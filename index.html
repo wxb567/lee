@@ -1,413 +1,620 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>自适应复古电视机视频播放器</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            // 复古色调
-            tvBrown: '#5d4037',
-            tvDarkBrown: '#3e2723',
-            tvBezel: '#263238',
-            tvScreen: '#121212',
-            wall: '#f5f5dc',
-            carpet: '#8b4513',
-            windowFrame: '#6d4c41',
-            plantPot: '#a1887f',
-            foliage: '#4caf50',
-          },
-          fontFamily: {
-            retro: ['Georgia', 'serif'],
-          },
-        },
-      }
-    }
-  </script>
-  <style type="text/tailwindcss">
-    @layer utilities {
-      .content-auto {
-        content-visibility: auto;
-      }
-      .tv-shadow {
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
-      }
-      .antenna {
-        transform-origin: bottom center;
-      }
-      .antenna-left {
-        transform: rotate(-25deg);
-      }
-      .antenna-right {
-        transform: rotate(25deg);
-      }
-      .channel-btn {
-        transition: all 0.2s ease;
-      }
-      .channel-btn:hover {
-        transform: scale(1.05);
-      }
-      .screen-curve {
-        border-radius: 2% / 3%;
-      }
-      .wood-grain {
-        background-image: 
-          linear-gradient(90deg, rgba(93, 64, 55, 0.9), rgba(93, 64, 55, 0.7) 50%, rgba(93, 64, 55, 0.9)),
-          linear-gradient(rgba(255, 255, 255, 0.1) 50%, transparent 50%);
-        background-size: 100% 6px, 100% 12px;
-      }
-      .window-panes {
-        background-image: 
-          linear-gradient(#000 1px, transparent 1px),
-          linear-gradient(90deg, #000 1px, transparent 1px);
-        background-size: 50% 50%;
-      }
-      .carpet-pattern {
-        background-image: 
-          radial-gradient(circle, rgba(139, 69, 19, 0.3) 5%, transparent 5%),
-          linear-gradient(45deg, rgba(139, 69, 19, 0.1) 25%, transparent 25%, transparent 75%, rgba(139, 69, 19, 0.1) 75%);
-        background-size: 30px 30px, 60px 60px;
-      }
-      .vintage-glow {
-        box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
-      }
-      .tv-knob {
-        box-shadow: inset 0 2px 5px rgba(255, 255, 255, 0.3), 0 2px 5px rgba(0, 0, 0, 0.5);
-      }
-      .aged-paper {
-        background-color: #f5f5dc;
-        background-image: 
-          linear-gradient(rgba(0, 0, 0, 0.05) 50%, transparent 50%),
-          linear-gradient(90deg, rgba(0, 0, 0, 0.05) 50%, transparent 50%);
-        background-size: 30px 30px;
-      }
-      .tv-container {
-        width: clamp(280px, 90vw, 1200px);
-      }
-      .aspect-tv {
-        aspect-ratio: 16/9;
-      }
-    }
-  </style>
-</head>
-<body class="bg-wall min-h-screen flex items-center justify-center p-4 overflow-x-hidden">
-  <!-- 房间背景 -->
-  <div class="fixed inset-0 -z-10 aged-paper opacity-70"></div>
-  
-  <!-- 窗户装饰 - 响应式调整 -->
-  <div class="absolute top-4 left-4 md:top-8 md:left-8 w-20 md:w-32 h-24 md:h-40 border-2 md:border-4 border-windowFrame rounded-md overflow-hidden bg-blue-400/30 shadow-lg">
-    <div class="w-full h-full window-panes opacity-50"></div>
-    <!-- 窗外风景 -->
-    <div class="absolute inset-0 bg-gradient-to-b from-blue-400 to-blue-200"></div>
-    <div class="absolute bottom-0 left-0 right-0 h-1/3 bg-green-500/70"></div>
-    <!-- 云朵 -->
-    <div class="absolute top-2 left-1 w-6 md:w-10 h-4 md:h-6 bg-white/80 rounded-full"></div>
-    <div class="absolute top-3 md:top-6 left-4 md:left-8 w-8 md:w-12 h-4 md:h-6 bg-white/80 rounded-full"></div>
-    <div class="absolute top-1 md:top-2 left-8 md:left-14 w-5 md:w-8 h-3 md:h-5 bg-white/80 rounded-full"></div>
-  </div>
-  
-  <!-- 盆栽装饰 - 响应式调整 -->
-  <div class="absolute top-4 right-4 md:top-8 right-8">
-    <!-- 花盆 -->
-    <div class="w-16 md:w-24 h-10 md:h-16 bg-plantPot rounded-t-xl relative overflow-hidden">
-      <div class="absolute inset-0 bg-gradient-to-r from-plantPot/80 to-plantPot/100"></div>
-      <div class="absolute bottom-0 left-0 right-0 h-2 md:h-3 bg-plantPot/70"></div>
-    </div>
-    <!-- 植物 -->
-    <div class="relative -mt-2 md:-mt-4">
-      <div class="absolute left-6 md:left-10 w-1.5 md:w-2 h-16 md:h-24 bg-foliage/80 rounded-t-full"></div>
-      <!-- 叶子 -->
-      <div class="absolute top-0 left-4 md:left-8 w-5 md:w-8 h-4 md:h-6 bg-foliage rounded-full transform -rotate-45"></div>
-      <div class="absolute top-5 md:top-8 left-7 md:left-12 w-6 md:w-10 h-4 md:h-7 bg-foliage rounded-full transform rotate-30"></div>
-      <div class="absolute top-9 md:top-14 left-2 md:left-4 w-5 md:w-9 h-4 md:h-6 bg-foliage rounded-full transform -rotate-20"></div>
-      <div class="absolute top-13 md:top-20 left-5 md:left-8 w-7 md:w-11 h-4 md:h-7 bg-foliage rounded-full transform rotate-45"></div>
-    </div>
-  </div>
-  
-  <!-- 地毯 -->
-  <div class="absolute bottom-0 left-0 right-0 h-1/5 md:h-1/4 bg-carpet carpet-pattern opacity-80"></div>
-  
-  <!-- 主内容容器 - 响应式调整 -->
-  <div class="relative tv-container mx-auto">
-    <!-- 电视桌 -->
-    <div class="absolute -bottom-16 md:-bottom-24 left-0 right-0 h-12 md:h-24 bg-tvBrown wood-grain rounded-lg shadow-lg"></div>
-    
-    <!-- 电视机主体 -->
-    <div class="relative bg-tvBrown wood-grain rounded-xl p-4 md:p-8 tv-shadow vintage-glow">
-      <!-- 电视屏幕区域 -->
-      <div class="bg-tvBezel rounded-lg p-3 md:p-6 screen-curve border border-tvDarkBrown/50">
-        <div class="aspect-tv bg-tvScreen rounded-sm overflow-hidden screen-curve relative">
-          <!-- 视频嵌入区域 - 更新为新的视频链接 -->
-          <div class="w-full h-full flex items-center justify-center">
-            <iframe 
-              id="videoPlayer"
-              class="w-full h-full" 
-              src="https://player.bilibili.com/player.html?isOutside=true&aid=830284792&bvid=BV1hu4y1D72e&cid=1295598071&p=1" 
-              scrolling="no" 
-              border="0" 
-              frameborder="no" 
-              framespacing="0" 
-              allowfullscreen="true"
-              sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox"
-            ></iframe>
-          </div>
-          
-          <!-- 屏幕发光效果 -->
-          <div class="absolute inset-0 bg-blue-500/5 rounded-sm screen-curve pointer-events-none"></div>
-          
-          <!-- 屏幕静电噪点效果 -->
-          <div id="staticNoise" class="absolute inset-0 opacity-0 pointer-events-none">
-            <div class="w-full h-full" style="background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PC9maWx0ZXI+PHJlY3Qgd2lkdGg9IjMwMCIgaGVpZ2h0PSIzMDAiIGZpbHRlcj0idXJsKCNhKSIgb3BhY2l0eT0iLjA1Ii8+PC9zdmc+'); background-size: 50px 50px;"></div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- 电视顶部装饰 -->
-      <div class="absolute -top-6 md:-top-10 left-1/2 transform -translate-x-1/2 w-40 md:w-64 h-4 md:h-6 bg-tvDarkBrown/70 rounded-t-lg flex items-center justify-center">
-        <div class="w-24 md:w-40 h-1 bg-gray-600 rounded-full"></div>
-      </div>
-      
-      <!-- 电视天线 -->
-      <div class="absolute -top-14 md:-top-24 left-1/2 transform -translate-x-1/2 flex space-x-8 md:space-x-12">
-        <div class="antenna antenna-left w-1 md:w-1.5 h-14 md:h-24 bg-gray-600 rounded-t-lg relative">
-          <div class="absolute -top-1 -left-1 w-2 md:w-3 h-2 md:h-3 bg-gray-400 rounded-full"></div>
-        </div>
-        <div class="antenna antenna-right w-1 md:w-1.5 h-14 md:h-24 bg-gray-600 rounded-t-lg relative">
-          <div class="absolute -top-1 -left-1 w-2 md:w-3 h-2 md:h-3 bg-gray-400 rounded-full"></div>
-        </div>
-      </div>
-      
-      <!-- 电视底部控制区域 - 响应式调整 -->
-      <div class="flex justify-between items-center mt-4 md:mt-8">
-        <!-- 频道控制 -->
-        <div class="flex flex-col items-center space-y-2 md:space-y-3">
-          <div class="text-xs md:text-sm font-retro text-white/80">频道</div>
-          <div class="flex space-x-2 md:space-x-3">
-            <button class="channel-btn w-8 md:w-12 h-8 md:h-12 bg-tvDarkBrown rounded-full flex items-center justify-center text-white shadow-inner tv-knob">
-              <i class="fa fa-minus text-xs md:text-lg"></i>
-            </button>
-            <div class="w-14 md:w-20 h-8 md:h-12 bg-gray-800 rounded-md flex items-center justify-center text-white font-retro text-lg md:text-xl border border-gray-700">
-              <span id="channelNumber">1</span>
-            </div>
-            <button class="channel-btn w-8 md:w-12 h-8 md:h-12 bg-tvDarkBrown rounded-full flex items-center justify-center text-white shadow-inner tv-knob">
-              <i class="fa fa-plus text-xs md:text-lg"></i>
-            </button>
-          </div>
-        </div>
-        
-        <!-- 音量控制 -->
-        <div class="flex flex-col items-center space-y-2 md:space-y-3">
-          <div class="text-xs md:text-sm font-retro text-white/80">音量</div>
-          <div class="flex items-center space-x-2 md:space-x-3">
-            <button class="channel-btn w-8 md:w-12 h-8 md:h-12 bg-tvDarkBrown rounded-full flex items-center justify-center text-white shadow-inner tv-knob">
-              <i class="fa fa-volume-down text-xs md:text-lg"></i>
-            </button>
-            <div class="h-2 md:h-3 w-24 md:w-40 bg-gray-700 rounded-full overflow-hidden border border-gray-600">
-              <div id="volumeLevel" class="h-full w-3/4 bg-yellow-500 rounded-full"></div>
-            </div>
-            <button class="channel-btn w-8 md:w-12 h-8 md:h-12 bg-tvDarkBrown rounded-full flex items-center justify-center text-white shadow-inner tv-knob">
-              <i class="fa fa-volume-up text-xs md:text-lg"></i>
-            </button>
-          </div>
-        </div>
-        
-        <!-- 电源按钮 -->
-        <div class="flex flex-col items-center space-y-2 md:space-y-3">
-          <div class="text-xs md:text-sm font-retro text-white/80">电源</div>
-          <button id="powerButton" class="channel-btn w-10 md:w-14 h-10 md:h-14 bg-red-600 rounded-full flex items-center justify-center text-white shadow-inner transition-all duration-300 tv-knob">
-            <i class="fa fa-power-off text-sm md:text-xl"></i>
-          </button>
-        </div>
-      </div>
-      
-      <!-- 电视底部装饰条 -->
-      <div class="mt-3 md:mt-6 h-1 md:h-2 bg-tvDarkBrown/80 rounded-b-lg"></div>
-      
-      <!-- 电视底座 -->
-      <div class="absolute -bottom-6 md:-bottom-10 left-1/2 transform -translate-x-1/2 flex justify-center space-x-12 md:space-x-24">
-        <div class="w-8 md:w-16 h-6 md:h-10 bg-tvDarkBrown rounded-b-lg wood-grain"></div>
-        <div class="w-8 md:w-16 h-6 md:h-10 bg-tvDarkBrown rounded-b-lg wood-grain"></div>
-      </div>
-    </div>
-    
-    <!-- 电视旁边的装饰物品 - 响应式调整 -->
-    <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1/2 md:-translate-x-3/4">
-      <!-- 老收音机 -->
-      <div class="w-16 md:w-24 h-24 md:h-32 bg-tvBrown wood-grain rounded-lg border border-tvDarkBrown/50 shadow-lg">
-        <div class="p-1 md:p-2">
-          <div class="h-8 md:h-12 bg-gray-800 rounded-sm mb-1 md:mb-2 flex items-center justify-center">
-            <div class="w-full h-6 md:h-8 bg-gray-700 rounded-sm overflow-hidden relative">
-              <div class="absolute inset-0 bg-gradient-to-r from-gray-600 via-gray-700 to-gray-600"></div>
-              <div class="absolute left-1/4 w-1 h-full bg-yellow-400/70"></div>
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-1 md:gap-2">
-            <div class="h-4 md:h-6 bg-tvDarkBrown rounded-full flex items-center justify-center text-white text-xs">AM</div>
-            <div class="h-4 md:h-6 bg-tvDarkBrown rounded-full flex items-center justify-center text-white text-xs">FM</div>
-            <div class="h-4 md:h-6 bg-gray-700 rounded-full"></div>
-            <div class="h-4 md:h-6 bg-gray-700 rounded-full"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1/2 md:translate-x-3/4">
-      <!-- 台灯 -->
-      <div class="relative">
-        <!-- 灯罩 -->
-        <div class="w-16 md:w-24 h-10 md:h-16 bg-yellow-50/90 rounded-t-full shadow-lg"></div>
-        <!-- 灯柱 -->
-        <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1.5 md:w-2 h-20 md:h-32 bg-gray-700 rounded-t-lg"></div>
-        <!-- 灯座 -->
-        <div class="absolute -bottom-4 md:-bottom-6 left-1/2 transform -translate-x-1/2 w-10 md:w-16 h-4 md:h-6 bg-gray-800 rounded-lg"></div>
-      </div>
-    </div>
-    
-    <!-- 电视说明文字 - 响应式调整 -->
-    <div class="mt-10 md:mt-20 text-center text-gray-700 text-xs md:text-sm font-retro">
-      <p>提示：如需更换视频，请修改iframe标签中的src属性为B站视频嵌入地址</p>
-      <p class="mt-1 md:mt-2">B站视频嵌入地址获取方法：打开B站视频页面 → 点击分享按钮 → 复制嵌入代码中的src属性值</p>
-    </div>
-  </div>
-
-  <script>
-    // 简单的电视交互效果
-    const powerButton = document.getElementById('powerButton');
-    const videoPlayer = document.getElementById('videoPlayer');
-    const channelNumber = document.getElementById('channelNumber');
-    const volumeLevel = document.getElementById('volumeLevel');
-    const staticNoise = document.getElementById('staticNoise');
-    let isOn = true;
-    let currentChannel = 1;
-    let volume = 75;
-    
-    // 电源开关
-    powerButton.addEventListener('click', () => {
-      isOn = !isOn;
-      if (isOn) {
-        powerButton.classList.remove('bg-gray-600');
-        powerButton.classList.add('bg-red-600');
-        videoPlayer.style.opacity = '1';
-        staticNoise.style.opacity = '0';
-        
-        // 模拟开机音效
-        simulatePowerSound('on');
-      } else {
-        powerButton.classList.remove('bg-red-600');
-        powerButton.classList.add('bg-gray-600');
-        videoPlayer.style.opacity = '0';
-        staticNoise.style.opacity = '0.2';
-        
-        // 模拟关机音效
-        simulatePowerSound('off');
-      }
-    });
-    
-    // 频道控制
-    document.querySelectorAll('.channel-btn').forEach(btn => {
-      if (btn.querySelector('.fa-plus')) {
-        btn.addEventListener('click', () => {
-          if (isOn) {
-            currentChannel = Math.min(currentChannel + 1, 99);
-            channelNumber.textContent = currentChannel;
-            simulateChannelChange();
-          }
-        });
-      } else if (btn.querySelector('.fa-minus')) {
-        btn.addEventListener('click', () => {
-          if (isOn) {
-            currentChannel = Math.max(currentChannel - 1, 1);
-            channelNumber.textContent = currentChannel;
-            simulateChannelChange();
-          }
-        });
-      }
-    });
-    
-    // 音量控制
-    document.querySelectorAll('.channel-btn').forEach(btn => {
-      if (btn.querySelector('.fa-volume-up')) {
-        btn.addEventListener('click', () => {
-          if (isOn) {
-            volume = Math.min(volume + 10, 100);
-            volumeLevel.style.width = `${volume}%`;
-          }
-        });
-      } else if (btn.querySelector('.fa-volume-down')) {
-        btn.addEventListener('click', () => {
-          if (isOn) {
-            volume = Math.max(volume - 10, 0);
-            volumeLevel.style.width = `${volume}%`;
-          }
-        });
-      }
-    });
-    
-    // 模拟频道切换效果
-    function simulateChannelChange() {
-      const screen = videoPlayer.parentElement;
-      screen.classList.add('animate-pulse');
-      setTimeout(() => {
-        screen.classList.remove('animate-pulse');
-      }, 500);
-    }
-    
-    // 模拟开关机音效
-    function simulatePowerSound(type) {
-      // 创建一个简单的音频上下文来模拟开关机声音
-      try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        
-        if (type === 'on') {
-          oscillator.type = 'sine';
-          oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
-          oscillator.frequency.exponentialRampToValueAtTime(2000, audioCtx.currentTime + 0.3);
-          gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-          gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.1);
-          gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
-          
-          oscillator.start();
-          oscillator.stop(audioCtx.currentTime + 0.5);
-        } else {
-          oscillator.type = 'sine';
-          oscillator.frequency.setValueAtTime(1500, audioCtx.currentTime);
-          oscillator.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.5);
-          gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-          gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
-          
-          oscillator.start();
-          oscillator.stop(audioCtx.currentTime + 0.5);
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>唱片点播机</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#FF7D00',
+                        dark: '#1E293B',
+                        light: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
         }
-      } catch (e) {
-        // 浏览器不支持音频API或用户已禁用
-        console.log('无法播放音效:', e);
-      }
-    }
-    
-    // 模拟电视开机预热效果
-    window.addEventListener('load', () => {
-      const screen = videoPlayer.parentElement;
-      screen.classList.add('animate-pulse');
-      setTimeout(() => {
-        screen.classList.remove('animate-pulse');
-      }, 1000);
-    });
-    
-    // 窗口大小变化时调整布局
-    window.addEventListener('resize', () => {
-      // 可添加更多响应式调整逻辑
-    });
-  </script>
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .rotate-center {
+                animation: rotate-center 20s linear infinite;
+            }
+            .needle-animation {
+                animation: needle-move 0.5s ease-out forwards;
+            }
+            .needle-back {
+                animation: needle-back 0.5s ease-out forwards;
+            }
+        }
+
+        @keyframes rotate-center {
+            0% { transform: rotate(0); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes needle-move {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(15deg); }
+        }
+
+        @keyframes needle-back {
+            0% { transform: rotate(15deg); }
+            100% { transform: rotate(0deg); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-dark to-slate-800 min-h-screen font-inter text-light">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- 顶部标题 -->
+        <header class="text-center mb-10">
+            <h1 class="text-[clamp(2rem,5vw,3.5rem)] font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary mb-2 text-shadow">唱片点播机</h1>
+            <p class="text-slate-400 text-lg">感受黑胶唱片带来的纯粹音乐体验</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- 唱片播放区域 - 占左侧1/3宽度 -->
+            <div class="lg:col-span-1 relative flex flex-col items-center justify-center bg-slate-900/50 rounded-2xl p-8 backdrop-blur-sm border border-slate-700/50 shadow-2xl">
+                <!-- 唱片机底座 -->
+                <div class="w-full max-w-md h-auto relative">
+                    <!-- 唱片 -->
+                    <div class="relative mx-auto w-64 h-64 md:w-80 md:h-80">
+                        <!-- 唱片外圈装饰 -->
+                        <div class="absolute inset-0 rounded-full border-8 border-slate-700 shadow-inner"></div>
+                        
+                        <!-- 唱针 -->
+                        <div id="needle" class="absolute top-0 right-0 w-24 h-32 transform origin-[20%_20%] z-20">
+                            <div class="w-full h-full relative">
+                                <div class="absolute top-0 left-0 w-full h-full bg-slate-400 rounded-full opacity-30"></div>
+                                <div class="absolute top-2 left-2 w-20 h-20 bg-slate-600 rounded-full opacity-30"></div>
+                                <div class="absolute top-4 left-4 w-16 h-16 bg-slate-800 rounded-full opacity-30"></div>
+                                <div class="absolute top-6 left-6 w-12 h-12 bg-slate-900 rounded-full opacity-30"></div>
+                                <div class="absolute top-8 left-8 w-8 h-8 bg-slate-700 rounded-full"></div>
+                                <div class="absolute top-8 left-10 w-12 h-2 bg-slate-400 rounded-sm transform rotate-45"></div>
+                                <div class="absolute top-14 left-20 w-4 h-1 bg-slate-300 rounded-sm transform rotate-45"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- 唱片 -->
+                        <div id="record" class="absolute inset-4 rounded-full bg-black overflow-hidden shadow-lg rotate-center paused">
+                            <!-- 唱片外圈 -->
+                            <div class="absolute inset-0 rounded-full border-2 border-slate-700"></div>
+                            <!-- 唱片纹路 -->
+                            <div class="absolute inset-4 rounded-full bg-black border-8 border-slate-800"></div>
+                            <div class="absolute inset-8 rounded-full bg-black border-4 border-slate-700"></div>
+                            <div class="absolute inset-12 rounded-full bg-black border-2 border-slate-600"></div>
+                            <div class="absolute inset-16 rounded-full bg-black border border-slate-500"></div>
+                            <div class="absolute inset-20 rounded-full bg-black border border-slate-400"></div>
+                            <div class="absolute inset-24 rounded-full bg-black border border-slate-300"></div>
+                            <!-- 唱片中心 -->
+                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-slate-400 flex items-center justify-center">
+                                <div class="w-6 h-6 rounded-full bg-black"></div>
+                            </div>
+                            <!-- 唱片封面 -->
+                            <div id="album-cover" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-slate-800">
+                                <img id="album-img" src="https://picsum.photos/seed/music1/300/300" alt="唱片封面" class="w-full h-full object-cover">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 歌曲信息 -->
+                <div class="mt-8 text-center">
+                    <h2 id="song-title" class="text-2xl font-bold mb-1">歌曲名称</h2>
+                    <p id="song-artist" class="text-slate-400">歌手</p>
+                </div>
+
+                <!-- 播放控制 -->
+                <div class="mt-6 flex flex-col items-center w-full max-w-md">
+                    <!-- 进度条 -->
+                    <div class="w-full mb-4 relative">
+                        <div class="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                            <div id="progress-bar" class="h-full bg-primary w-0 rounded-full transition-all duration-150"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-slate-400 mt-1">
+                            <span id="current-time">0:00</span>
+                            <span id="total-time">0:00</span>
+                        </div>
+                    </div>
+
+                    <!-- 控制按钮 -->
+                    <div class="flex items-center justify-center gap-6">
+                        <button id="shuffle-btn" class="text-slate-400 hover:text-secondary transition-colors">
+                            <i class="fa fa-random text-xl"></i>
+                        </button>
+                        <button id="prev-btn" class="text-slate-300 hover:text-white transition-colors">
+                            <i class="fa fa-step-backward text-2xl"></i>
+                        </button>
+                        <button id="play-btn" class="w-14 h-14 bg-primary hover:bg-primary/90 rounded-full flex items-center justify-center shadow-lg transform hover:scale-105 transition-all">
+                            <i class="fa fa-play text-white text-xl ml-1"></i>
+                        </button>
+                        <button id="next-btn" class="text-slate-300 hover:text-white transition-colors">
+                            <i class="fa fa-step-forward text-2xl"></i>
+                        </button>
+                        <button id="repeat-btn" class="text-slate-400 hover:text-secondary transition-colors relative">
+                            <i class="fa fa-repeat text-xl"></i>
+                        </button>
+                    </div>
+
+                    <!-- 音量控制 -->
+                    <div class="mt-6 flex items-center gap-3 w-full max-w-xs">
+                        <i class="fa fa-volume-up text-slate-300"></i>
+                        <input id="volume-slider" type="range" min="0" max="1" step="0.05" value="0.7" 
+                               class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 歌词和歌曲列表 - 占右侧2/3宽度 -->
+            <div class="lg:col-span-2 bg-slate-900/50 rounded-2xl p-8 backdrop-blur-sm border border-slate-700/50 shadow-2xl flex flex-col">
+                <!-- 标签页导航 -->
+                <div class="flex border-b border-slate-700 mb-6">
+                    <button id="lyrics-tab" class="px-6 py-3 font-medium text-white border-b-2 border-primary">歌词</button>
+                    <button id="playlist-tab" class="px-6 py-3 font-medium text-slate-400 hover:text-white transition-colors">歌曲列表</button>
+                </div>
+
+                <!-- 歌词显示区域 -->
+                <div id="lyrics-container" class="flex-1 overflow-y-auto pr-2">
+                    <div id="lyrics" class="text-center space-y-3 text-lg">
+                        <p class="text-slate-400">点击播放按钮开始播放音乐</p>
+                        <p class="text-slate-500">歌词将在这里显示</p>
+                    </div>
+                </div>
+
+                <!-- 歌曲列表 -->
+                <div id="playlist-container" class="hidden flex-1 overflow-y-auto pr-2">
+                    <ul id="playlist" class="space-y-2">
+                        <!-- 歌曲列表项会通过JavaScript动态添加 -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <footer class="mt-12 text-center text-slate-500 text-sm">
+            <p>© 2025 唱片点播机 - 享受音乐的美好时光</p>
+        </footer>
+    </div>
+
+    <script>
+        // 音乐数据 - 你可以添加更多歌曲
+        const songs = [
+            {
+                title: "Summer Memories",
+                artist: "音乐创作者",
+                file: "music/song1.mp3", // 替换为你的音乐文件路径
+                cover: "https://picsum.photos/seed/music1/300/300",
+                lyrics: "music/song1.lrc" // 替换为你的歌词文件路径
+            },
+            {
+                title: "Autumn Breeze",
+                artist: "旋律大师",
+                file: "music/song2.mp3", // 替换为你的音乐文件路径
+                cover: "https://picsum.photos/seed/music2/300/300",
+                lyrics: "music/song2.lrc" // 替换为你的歌词文件路径
+            },
+            {
+                title: "Winter Night",
+                artist: "声音诗人",
+                file: "music/song3.mp3", // 替换为你的音乐文件路径
+                cover: "https://picsum.photos/seed/music3/300/300",
+                lyrics: "music/song3.lrc" // 替换为你的歌词文件路径
+            }
+        ];
+
+        // 当前播放歌曲索引
+        let currentSongIndex = 0;
+        // 音乐元素
+        let audio = new Audio();
+        // 歌词解析结果
+        let lyrics = [];
+        // 播放状态
+        let isPlaying = false;
+        // 重复模式：0-不重复，1-单曲循环，2-列表循环
+        let repeatMode = 2;
+        // 随机播放状态
+        let isShuffle = false;
+        // 上一次随机播放的索引
+        let lastShuffleIndex = -1;
+
+        // DOM 元素
+        const record = document.getElementById('record');
+        const needle = document.getElementById('needle');
+        const playBtn = document.getElementById('play-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const progressBar = document.getElementById('progress-bar');
+        const currentTimeEl = document.getElementById('current-time');
+        const totalTimeEl = document.getElementById('total-time');
+        const volumeSlider = document.getElementById('volume-slider');
+        const songTitle = document.getElementById('song-title');
+        const songArtist = document.getElementById('song-artist');
+        const albumImg = document.getElementById('album-img');
+        const lyricsContainer = document.getElementById('lyrics-container');
+        const playlistContainer = document.getElementById('playlist-container');
+        const lyricsTab = document.getElementById('lyrics-tab');
+        const playlistTab = document.getElementById('playlist-tab');
+        const playlist = document.getElementById('playlist');
+        const repeatBtn = document.getElementById('repeat-btn');
+        const shuffleBtn = document.getElementById('shuffle-btn');
+        const lyricsEl = document.getElementById('lyrics');
+
+        // 初始化
+        function init() {
+            // 加载第一首歌曲
+            loadSong(songs[currentSongIndex]);
+            
+            // 创建歌曲列表
+            createPlaylist();
+            
+            // 注册事件监听器
+            registerEventListeners();
+        }
+
+        // 加载歌曲
+        function loadSong(song) {
+            audio.src = song.file;
+            songTitle.textContent = song.title;
+            songArtist.textContent = song.artist;
+            albumImg.src = song.cover;
+            albumImg.alt = `${song.title} - ${song.artist} 专辑封面`;
+            
+            // 重置状态
+            isPlaying = false;
+            updatePlayButton();
+            record.classList.add('paused');
+            needle.classList.remove('needle-animation');
+            needle.classList.add('needle-back');
+            
+            // 加载歌词
+            loadLyrics(song.lyrics);
+            
+            // 更新歌曲列表中的当前选中项
+            updateActiveSongInPlaylist();
+        }
+
+        // 加载歌词
+        function loadLyrics(lyricsPath) {
+            // 清空当前歌词
+            lyrics = [];
+            lyricsEl.innerHTML = '<p class="text-slate-400">歌词加载中...</p>';
+            
+            // 模拟加载歌词 - 实际应用中应该从lyricsPath加载歌词文件
+            setTimeout(() => {
+                // 这里使用示例歌词，实际应用中应该解析lrc文件内容
+                lyrics = [
+                    { time: 0, text: "歌曲加载中..." },
+                    { time: 5, text: "这是一首美妙的歌曲" },
+                    { time: 10, text: "你可以在这里享受音乐" },
+                    { time: 15, text: "随着旋律摇摆" },
+                    { time: 20, text: "感受每一个音符" },
+                    { time: 25, text: "让音乐带你飞翔" },
+                    { time: 30, text: "沉浸在音乐的世界" },
+                    { time: 35, text: "享受这美好时光" },
+                    { time: 40, text: "音乐是心灵的语言" },
+                    { time: 45, text: "让我们一起聆听" },
+                    { time: 50, text: "感受音乐的魅力" },
+                    { time: 55, text: "每一个音符都是故事" },
+                    { time: 60, text: "让音乐持续播放" }
+                ];
+                
+                // 显示初始歌词
+                displayLyrics();
+            }, 500);
+        }
+
+        // 显示歌词
+        function displayLyrics() {
+            lyricsEl.innerHTML = '';
+            
+            if (lyrics.length === 0) {
+                lyricsEl.innerHTML = '<p class="text-slate-400">暂无歌词</p>';
+                return;
+            }
+            
+            // 获取当前播放时间
+            const currentTime = audio.currentTime;
+            
+            // 查找当前应该高亮的歌词行
+            let currentLineIndex = 0;
+            for (let i = 0; i < lyrics.length - 1; i++) {
+                if (currentTime >= lyrics[i].time && currentTime < lyrics[i + 1].time) {
+                    currentLineIndex = i;
+                    break;
+                }
+            }
+            
+            // 如果当前时间超过了最后一行歌词的时间，则高亮最后一行
+            if (currentTime >= lyrics[lyrics.length - 1].time) {
+                currentLineIndex = lyrics.length - 1;
+            }
+            
+            // 显示歌词，高亮当前行
+            lyrics.forEach((line, index) => {
+                const lineEl = document.createElement('p');
+                lineEl.textContent = line.text;
+                
+                if (index === currentLineIndex) {
+                    lineEl.className = 'text-primary font-medium';
+                } else {
+                    lineEl.className = 'text-slate-400 hover:text-white transition-colors';
+                }
+                
+                lyricsEl.appendChild(lineEl);
+            });
+            
+            // 滚动到当前歌词行
+            if (currentLineIndex > 0) {
+                const currentLineElement = lyricsEl.children[currentLineIndex];
+                if (currentLineElement) {
+                    currentLineElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+
+        // 创建歌曲列表
+        function createPlaylist() {
+            playlist.innerHTML = '';
+            
+            songs.forEach((song, index) => {
+                const songItem = document.createElement('li');
+                songItem.className = `flex items-center p-3 rounded-lg hover:bg-slate-800/50 transition-colors cursor-pointer ${index === currentSongIndex ? 'bg-slate-800/70 border-l-4 border-primary' : ''}`;
+                
+                songItem.innerHTML = `
+                    <div class="w-10 h-10 rounded-full overflow-hidden mr-4">
+                        <img src="${song.cover}" alt="${song.title} 封面" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-medium">${song.title}</h3>
+                        <p class="text-sm text-slate-400">${song.artist}</p>
+                    </div>
+                    <div class="text-slate-400">
+                        ${index === currentSongIndex ? '<i class="fa fa-play-circle text-primary"></i>' : ''}
+                    </div>
+                `;
+                
+                songItem.addEventListener('click', () => {
+                    if (index !== currentSongIndex) {
+                        currentSongIndex = index;
+                        loadSong(songs[currentSongIndex]);
+                        playSong();
+                    }
+                });
+                
+                playlist.appendChild(songItem);
+            });
+        }
+
+        // 更新歌曲列表中的当前选中项
+        function updateActiveSongInPlaylist() {
+            const songItems = playlist.querySelectorAll('li');
+            
+            songItems.forEach((item, index) => {
+                if (index === currentSongIndex) {
+                    item.classList.add('bg-slate-800/70', 'border-l-4', 'border-primary');
+                    item.querySelector('div:last-child').innerHTML = '<i class="fa fa-play-circle text-primary"></i>';
+                } else {
+                    item.classList.remove('bg-slate-800/70', 'border-l-4', 'border-primary');
+                    item.querySelector('div:last-child').innerHTML = '';
+                }
+            });
+        }
+
+        // 播放歌曲
+        function playSong() {
+            audio.play();
+            isPlaying = true;
+            updatePlayButton();
+            record.classList.remove('paused');
+            needle.classList.remove('needle-back');
+            needle.classList.add('needle-animation');
+        }
+
+        // 暂停歌曲
+        function pauseSong() {
+            audio.pause();
+            isPlaying = false;
+            updatePlayButton();
+            record.classList.add('paused');
+            needle.classList.remove('needle-animation');
+            needle.classList.add('needle-back');
+        }
+
+        // 更新播放按钮
+        function updatePlayButton() {
+            if (isPlaying) {
+                playBtn.innerHTML = '<i class="fa fa-pause text-white text-xl"></i>';
+            } else {
+                playBtn.innerHTML = '<i class="fa fa-play text-white text-xl ml-1"></i>';
+            }
+        }
+
+        // 更新进度条
+        function updateProgress() {
+            const { duration, currentTime } = audio;
+            const progressPercent = (currentTime / duration) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+            
+            // 更新时间显示
+            currentTimeEl.textContent = formatTime(currentTime);
+            totalTimeEl.textContent = formatTime(duration);
+            
+            // 更新歌词显示
+            displayLyrics();
+        }
+
+        // 格式化时间
+        function formatTime(timeInSeconds) {
+            if (isNaN(timeInSeconds)) return '0:00';
+            
+            const minutes = Math.floor(timeInSeconds / 60);
+            const seconds = Math.floor(timeInSeconds % 60);
+            
+            return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }
+
+        // 设置进度
+        function setProgress(e) {
+            const width = this.clientWidth;
+            const clickX = e.offsetX;
+            const duration = audio.duration;
+            
+            audio.currentTime = (clickX / width) * duration;
+        }
+
+        // 设置音量
+        function setVolume() {
+            audio.volume = this.value;
+        }
+
+        // 下一首歌曲
+        function nextSong() {
+            if (isShuffle) {
+                // 随机播放模式
+                let randomIndex;
+                do {
+                    randomIndex = Math.floor(Math.random() * songs.length);
+                } while (randomIndex === currentSongIndex && songs.length > 1);
+                
+                lastShuffleIndex = currentSongIndex;
+                currentSongIndex = randomIndex;
+            } else {
+                // 顺序播放模式
+                currentSongIndex = (currentSongIndex + 1) % songs.length;
+            }
+            
+            loadSong(songs[currentSongIndex]);
+            playSong();
+        }
+
+        // 上一首歌曲
+        function prevSong() {
+            if (isShuffle && lastShuffleIndex !== -1) {
+                // 如果是随机播放，且有上一次的随机索引，则回到上一次的歌曲
+                currentSongIndex = lastShuffleIndex;
+                lastShuffleIndex = -1;
+            } else {
+                // 顺序播放模式
+                currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
+            }
+            
+            loadSong(songs[currentSongIndex]);
+            playSong();
+        }
+
+        // 切换重复模式
+        function toggleRepeatMode() {
+            repeatMode = (repeatMode + 1) % 3;
+            
+            switch (repeatMode) {
+                case 0: // 不重复
+                    repeatBtn.innerHTML = '<i class="fa fa-repeat text-xl"></i>';
+                    repeatBtn.classList.remove('text-secondary');
+                    break;
+                case 1: // 单曲循环
+                    repeatBtn.innerHTML = '<i class="fa fa-repeat text-xl"></i><span class="absolute text-[8px] top-0 right-0">1</span>';
+                    repeatBtn.classList.add('text-secondary');
+                    break;
+                case 2: // 列表循环
+                    repeatBtn.innerHTML = '<i class="fa fa-repeat text-xl"></i>';
+                    repeatBtn.classList.add('text-secondary');
+                    break;
+            }
+        }
+
+        // 切换随机播放
+        function toggleShuffle() {
+            isShuffle = !isShuffle;
+            
+            if (isShuffle) {
+                shuffleBtn.classList.add('text-secondary');
+            } else {
+                shuffleBtn.classList.remove('text-secondary');
+                lastShuffleIndex = -1;
+            }
+        }
+
+        // 注册事件监听器
+        function registerEventListeners() {
+            // 播放/暂停按钮
+            playBtn.addEventListener('click', () => {
+                if (isPlaying) {
+                    pauseSong();
+                } else {
+                    playSong();
+                }
+            });
+            
+            // 上一首/下一首按钮
+            prevBtn.addEventListener('click', prevSong);
+            nextBtn.addEventListener('click', nextSong);
+            
+            // 进度条更新
+            audio.addEventListener('timeupdate', updateProgress);
+            
+            // 进度条点击
+            progressBar.parentElement.addEventListener('click', setProgress);
+            
+            // 音量控制
+            volumeSlider.addEventListener('input', setVolume);
+            
+            // 歌曲结束
+            audio.addEventListener('ended', () => {
+                if (repeatMode === 1) {
+                    // 单曲循环
+                    audio.currentTime = 0;
+                    playSong();
+                } else {
+                    // 下一首
+                    nextSong();
+                }
+            });
+            
+            // 标签页切换
+            lyricsTab.addEventListener('click', () => {
+                lyricsTab.classList.add('text-white', 'border-b-2', 'border-primary');
+                lyricsTab.classList.remove('text-slate-400');
+                playlistTab.classList.remove('text-white', 'border-b-2', 'border-primary');
+                playlistTab.classList.add('text-slate-400');
+                
+                lyricsContainer.classList.remove('hidden');
+                playlistContainer.classList.add('hidden');
+            });
+            
+            playlistTab.addEventListener('click', () => {
+                playlistTab.classList.add('text-white', 'border-b-2', 'border-primary');
+                playlistTab.classList.remove('text-slate-400');
+                lyricsTab.classList.remove('text-white', 'border-b-2', 'border-primary');
+                lyricsTab.classList.add('text-slate-400');
+                
+                playlistContainer.classList.remove('hidden');
+                lyricsContainer.classList.add('hidden');
+            });
+            
+            // 重复模式切换
+            repeatBtn.addEventListener('click', toggleRepeatMode);
+            
+            // 随机播放切换
+            shuffleBtn.addEventListener('click', toggleShuffle);
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
 </body>
 </html>
     
